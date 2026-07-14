@@ -1,0 +1,50 @@
+﻿name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  powershell:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Install pinned quality modules
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -RequiredVersion 6.0.0 -Scope CurrentUser -Force
+          Install-Module PSScriptAnalyzer -RequiredVersion 1.25.0 -Scope CurrentUser -Force
+
+      - name: Run offline release gate
+        shell: pwsh
+        run: ./tests/Run-OfflineTests.ps1
+
+      - name: Analyze PowerShell
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Import-Module PSScriptAnalyzer -RequiredVersion 1.25.0
+            $findings = @(
+              Invoke-ScriptAnalyzer -Path ./src -Recurse -Severity Warning
+              Invoke-ScriptAnalyzer -Path ./tests -Recurse -Severity Warning
+            )
+          $findings | Format-Table -AutoSize
+          if ($findings.Count -gt 0) {
+              throw "PSScriptAnalyzer reported $($findings.Count) finding(s)."
+          }
+
+      - name: Run Pester
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Import-Module Pester -RequiredVersion 6.0.0
+          Invoke-Pester -Path ./tests/CredentialExpiry.Tests.ps1 -CI -Output Detailed
