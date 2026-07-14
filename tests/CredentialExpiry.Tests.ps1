@@ -44,6 +44,67 @@ Describe 'Get-EntraCredentialExpiryFinding' {
 }
 
 Describe 'Get-EntraCredentialInventory' {
+    It 'skips agentIdentityBlueprint placeholder objects returned by Graph' {
+        $requests = [System.Collections.Generic.List[string]]::new()
+        $responses = @{
+            '/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials' = @{
+                value = @(
+                    @{
+                        '@odata.type' = '#microsoft.graph.application'
+                        id = 'app-object-1'
+                        appId = 'app-client-1'
+                        displayName = 'App One'
+                        passwordCredentials = @()
+                        keyCredentials = @()
+                    },
+                    @{
+                        '@odata.type' = '#microsoft.graph.agentIdentityBlueprint'
+                        id = 'blueprint-object-1'
+                        appId = 'blueprint-client-1'
+                        displayName = 'Blueprint One'
+                        passwordCredentials = @()
+                        keyCredentials = @()
+                    }
+                )
+            }
+            '/v1.0/servicePrincipals?$select=id,appId,displayName,passwordCredentials,keyCredentials' = @{
+                value = @(
+                    @{
+                        '@odata.type' = '#microsoft.graph.servicePrincipal'
+                        id = 'sp-object-1'
+                        appId = 'app-client-1'
+                        displayName = 'SP One'
+                        passwordCredentials = @()
+                        keyCredentials = @()
+                    },
+                    @{
+                        '@odata.type' = '#microsoft.graph.agentIdentityBlueprintPrincipal'
+                        id = 'blueprint-principal-1'
+                        appId = 'blueprint-client-2'
+                        displayName = 'Blueprint Principal One'
+                        passwordCredentials = @()
+                        keyCredentials = @()
+                    }
+                )
+            }
+        }
+        $request = {
+            param([string]$Uri, [string]$Method)
+            $Method | Should -Be 'GET'
+            $requests.Add($Uri)
+            return $responses[$Uri]
+        }
+
+        $inventory = @(Get-EntraCredentialInventory -Request $request)
+
+        $inventory.ResourceType | Should -Be @(
+            'application',
+            'servicePrincipal'
+        )
+        $inventory.Count | Should -Be 2
+        $requests.Count | Should -Be 2
+    }
+
     It 'follows Graph pagination using GET and strips credential values immediately' {
         $requests = [System.Collections.Generic.List[string]]::new()
         $responses = @{
@@ -175,12 +236,15 @@ Describe 'Module metadata and documentation' {
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
 
-        $moduleData.ModuleVersion | Should -Be '0.1.4'
-        $readme | Should -BeLike '*Version 0.1.4*'
+        $moduleData.ModuleVersion | Should -Be '0.1.5'
+        $readme | Should -BeLike '*Version 0.1.5*'
+        $readme | Should -BeLike '*agentIdentityBlueprint*'
+        $readme | Should -BeLike '*agentIdentityBlueprintPrincipal*'
         $readme | Should -BeLike '*Application.Read.All*'
         $readme | Should -BeLike '*/v1.0/applications*'
         $readme | Should -BeLike '*/v1.0/servicePrincipals*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.4 is read-only*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.5 is read-only*'
+        $security | Should -BeLike '*agentIdentityBlueprint*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
     }
 }

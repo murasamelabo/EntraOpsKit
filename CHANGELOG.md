@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.5 - 2026-07-14
+
+- Ignore `agentIdentityBlueprint` and `agentIdentityBlueprintPrincipal` placeholder objects returned by the Graph list endpoints.
+- Refresh release metadata and security wording to match the current read-only GET-only Microsoft Graph boundary.
+- Keep the read-only Microsoft Graph boundary and no-secret output behavior unchanged.
+
 ## v0.1.4 - 2026-07-14
 
 - Refresh release metadata and security wording to match the current read-only GET-only Microsoft Graph boundary.

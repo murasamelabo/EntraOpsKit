@@ -1,4 +1,4 @@
-﻿Set-StrictMode -Version Latest
+Set-StrictMode -Version Latest
 
 $script:ApplicationReadScope = 'Application.Read.All'
 $script:GlobalGraphHost = 'graph.microsoft.com'
@@ -59,6 +59,9 @@ function Get-EntraCredentialInventory {
             }
             $resources = @(Get-EntraPropertyValue -InputObject $response -Name 'value')
             foreach ($resource in $resources) {
+                if (-not (Test-EntraGraphSupportedResource -InputObject $resource)) {
+                    continue
+                }
                 [pscustomobject]@{
                     PSTypeName          = 'EntraOpsKit.CredentialResource'
                     ResourceType        = $query.Type
@@ -266,6 +269,17 @@ function Assert-EntraGraphReadUri {
 
     if ($Uri -ne $ResourcePath -and -not $Uri.StartsWith("${ResourcePath}?")) {
         throw "Microsoft Graph request URI is outside '$ResourcePath'."
+    }
+}
+
+function Test-EntraGraphSupportedResource {
+    param([object]$InputObject)
+
+    $odataType = [string](Get-EntraPropertyValue -InputObject $InputObject -Name '@odata.type')
+    switch ($odataType) {
+        '#microsoft.graph.agentIdentityBlueprint' { return $false }
+        '#microsoft.graph.agentIdentityBlueprintPrincipal' { return $false }
+        default { return $true }
     }
 }
 

@@ -2,7 +2,7 @@
 
 EntraOpsKit is a collection of narrowly scoped, read-only Microsoft Entra operations tools. Each release is produced by an auditable AutoStudio research-to-release cycle and must pass an offline, digest-pinned quality gate before publication.
 
-Version 0.1.4 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials.
+Version 0.1.5 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ The live inventory follows Microsoft Graph pagination for both resource types. O
 - /v1.0/applications
 - /v1.0/servicePrincipals
 
-Absolute pagination links must use HTTPS, the graph.microsoft.com host, and the same resource path. A response that attempts to redirect pagination elsewhere is rejected before another request is sent.
+Microsoft Graph may also return `agentIdentityBlueprint` and `agentIdentityBlueprintPrincipal` placeholder objects from these endpoints; EntraOpsKit ignores those non-resource values before creating inventory rows. Absolute pagination links must use HTTPS, the graph.microsoft.com host, and the same resource path. A response that attempts to redirect pagination elsewhere is rejected before another request is sent.
 
 ## Output Safety
 
