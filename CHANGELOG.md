@@ -1,4 +1,10 @@
-﻿# Changelog
+# Changelog
+
+## v0.1.2 - 2026-07-14
+
+- Add explicit CSV export regression coverage to the Pester suite.
+- Keep the read-only Microsoft Graph boundary and no-secret output behavior unchanged.
+- Preserve the existing GET-only application and service-principal inventory flow.
 
 ## v0.1.1 - 2026-07-14
 
