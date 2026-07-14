@@ -51,7 +51,11 @@ function Get-EntraCredentialInventory {
 
     foreach ($query in $resourceQueries) {
         $uri = $query.Uri
+        $visitedUris = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
         while ($uri) {
+            if (-not $visitedUris.Add([string]$uri)) {
+                throw "Microsoft Graph pagination URI was repeated for '$($query.Path)'."
+            }
             Assert-EntraGraphReadUri -Uri $uri -ResourcePath $query.Path
             $response = & $Request -Uri $uri -Method 'GET'
             if ($null -eq $response) {

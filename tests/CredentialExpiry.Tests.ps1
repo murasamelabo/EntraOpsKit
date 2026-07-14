@@ -60,6 +60,25 @@ Describe 'Get-EntraCredentialInventory' {
         $requests.Count | Should -Be 1
     }
 
+    It 'rejects a repeated pagination URI before invoking it again' {
+        $requests = [System.Collections.Generic.List[string]]::new()
+        $pageTwo = 'https://graph.microsoft.com/v1.0/applications?page=2'
+        $request = {
+            param([string]$Uri, [string]$Method)
+            $Method | Should -Be 'GET'
+            $requests.Add($Uri)
+            if ($Uri -eq $pageTwo) {
+                return @{ value = @(); '@odata.nextLink' = $pageTwo }
+            }
+            return @{ value = @(); '@odata.nextLink' = $pageTwo }
+        }
+        { Get-EntraCredentialInventory -Request $request } | Should -Throw '*pagination URI was repeated*'
+        $requests | Should -Be @(
+            '/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials',
+            $pageTwo
+        )
+    }
+
     It 'rejects a malformed tenant identifier before invoking a callback' {
         $called = $false
         $request = { $called = $true }
@@ -126,11 +145,12 @@ Describe 'Module metadata and documentation' {
         $moduleData = Import-PowerShellDataFile $modulePath
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
-        $moduleData.ModuleVersion | Should -Be '0.1.7'
-        $readme | Should -BeLike '*Version 0.1.7*'
+        $moduleData.ModuleVersion | Should -Be '0.1.8'
+        $readme | Should -BeLike '*Version 0.1.8*'
         $readme | Should -BeLike '*Application.Read.All*'
         $readme | Should -BeLike '*operator-supplied test seam*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.7 is read-only*'
+        $readme | Should -BeLike '*Repeated pagination links are rejected*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.8 is read-only*'
         $security | Should -BeLike '*requested TenantId*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
     }

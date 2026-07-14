@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.8 - 2026-07-15
+
+- Reject an exact repeated Microsoft Graph pagination URI before invoking another request.
+- Add offline Pester coverage proving cyclic pagination stops after the first repeated link.
+- Keep GET-only endpoints, Application.Read.All, dependencies, output fields, and the no-secret boundary unchanged.
+
 ## v0.1.7 - 2026-07-15
 
 - Validate a supplied TenantId against the active Microsoft Graph context before built-in live collection.

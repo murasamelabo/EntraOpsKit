@@ -2,7 +2,7 @@
 
 EntraOpsKit is a collection of narrowly scoped, read-only Microsoft Entra operations tools. Version-pinned CI dependencies, offline project tests, Pester, and PSScriptAnalyzer provide release checks before publication.
 
-Version 0.1.7 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials. When `TenantId` is supplied for built-in live collection, the active Microsoft Graph context must identify that tenant before collection begins.
+Version 0.1.8 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials. When `TenantId` is supplied for built-in live collection, the active Microsoft Graph context must identify that tenant before collection begins. Repeated pagination links are rejected before another request is issued.
 
 ## Requirements
 
@@ -28,7 +28,7 @@ The built-in live inventory follows pagination for these GET-only endpoints:
 - /v1.0/applications
 - /v1.0/servicePrincipals
 
-Absolute pagination links must use HTTPS, the graph.microsoft.com host, and the same resource path. National-cloud hosts are not currently supported. Placeholder `agentIdentityBlueprint` and `agentIdentityBlueprintPrincipal` values are ignored.
+Absolute pagination links must use HTTPS, the graph.microsoft.com host, and the same resource path. An exact repeated pagination URI for the same resource is rejected. National-cloud hosts are not currently supported. Placeholder `agentIdentityBlueprint` and `agentIdentityBlueprintPrincipal` values are ignored.
 
 If `TenantId` is supplied, built-in live collection compares it with the active context's tenant before issuing an inventory request. The optional `Request` scriptblock is an operator-supplied test seam that bypasses module-managed authentication and context validation. URI and GET method arguments are validated before callback invocation, but unrelated callback behavior cannot be constrained. Use only trusted callback code.
 
