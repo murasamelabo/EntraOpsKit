@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.6 - 2026-07-14
+
+- Correct release-assurance wording to match the repository-visible CI implementation.
+- Clarify that the optional operator-supplied Request callback is outside the built-in Graph behavior boundary.
+- Align release metadata and documentation without changing endpoints, permissions, dependencies, or runtime behavior.
+
 ## v0.1.5 - 2026-07-14
 
 - Ignore `agentIdentityBlueprint` and `agentIdentityBlueprintPrincipal` placeholder objects returned by the Graph list endpoints.

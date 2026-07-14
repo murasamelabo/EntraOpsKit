@@ -1,8 +1,8 @@
-﻿# Roadmap
+# Roadmap
 
-EntraOpsKit evolves through bounded AutoStudio cycles. A roadmap item is a research candidate, not a
-commitment; each item must cite current Microsoft documentation, pass deterministic prioritization,
-and remain read-only unless a separately reviewed policy explicitly changes the product boundary.
+EntraOpsKit evolves through bounded cycles. A roadmap item is a research candidate, not a commitment;
+each item must cite current Microsoft documentation, pass deterministic prioritization, and remain
+read-only unless a separately reviewed policy explicitly changes the product boundary.
 
 ## Candidate Cycles
 
@@ -14,12 +14,14 @@ and remain read-only unless a separately reviewed policy explicitly changes the 
    collecting token or credential values.
 4. Certificate policy checks: flag weak operational patterns such as missing overlap windows while
    leaving rotation to administrators.
+5. Existing-context tenant validation: reject a supplied TenantId that does not match an active
+   Microsoft Graph context.
 
 ## Release Invariants
 
 - Microsoft Learn evidence is refreshed for every cycle.
-- Least privilege is documented and enforced in the tool boundary.
+- Least privilege is documented and enforced in the built-in tool boundary.
 - No tenant mutation is introduced by default.
-- Offline quality gates run in a network-disabled, digest-pinned container.
+- The offline runner makes no network requests; CI dependency installation is separately version-pinned.
 - Implementation and release review remain separate responsibilities.
-- A release is traceable to one AutoStudio operation ID and immutable commit.
+- A release is traceable to an immutable commit.

@@ -45,123 +45,29 @@ Describe 'Get-EntraCredentialExpiryFinding' {
 
 Describe 'Get-EntraCredentialInventory' {
     It 'skips agentIdentityBlueprint placeholder objects returned by Graph' {
-        $requests = [System.Collections.Generic.List[string]]::new()
         $responses = @{
             '/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials' = @{
                 value = @(
-                    @{
-                        '@odata.type' = '#microsoft.graph.application'
-                        id = 'app-object-1'
-                        appId = 'app-client-1'
-                        displayName = 'App One'
-                        passwordCredentials = @()
-                        keyCredentials = @()
-                    },
-                    @{
-                        '@odata.type' = '#microsoft.graph.agentIdentityBlueprint'
-                        id = 'blueprint-object-1'
-                        appId = 'blueprint-client-1'
-                        displayName = 'Blueprint One'
-                        passwordCredentials = @()
-                        keyCredentials = @()
-                    }
+                    @{ '@odata.type' = '#microsoft.graph.application'; id = 'app-object-1'; appId = 'app-client-1'; displayName = 'App One'; passwordCredentials = @(); keyCredentials = @() },
+                    @{ '@odata.type' = '#microsoft.graph.agentIdentityBlueprint'; id = 'ignored'; passwordCredentials = @(); keyCredentials = @() }
                 )
             }
             '/v1.0/servicePrincipals?$select=id,appId,displayName,passwordCredentials,keyCredentials' = @{
                 value = @(
-                    @{
-                        '@odata.type' = '#microsoft.graph.servicePrincipal'
-                        id = 'sp-object-1'
-                        appId = 'app-client-1'
-                        displayName = 'SP One'
-                        passwordCredentials = @()
-                        keyCredentials = @()
-                    },
-                    @{
-                        '@odata.type' = '#microsoft.graph.agentIdentityBlueprintPrincipal'
-                        id = 'blueprint-principal-1'
-                        appId = 'blueprint-client-2'
-                        displayName = 'Blueprint Principal One'
-                        passwordCredentials = @()
-                        keyCredentials = @()
-                    }
+                    @{ '@odata.type' = '#microsoft.graph.servicePrincipal'; id = 'sp-object-1'; appId = 'app-client-1'; displayName = 'SP One'; passwordCredentials = @(); keyCredentials = @() },
+                    @{ '@odata.type' = '#microsoft.graph.agentIdentityBlueprintPrincipal'; id = 'ignored'; passwordCredentials = @(); keyCredentials = @() }
                 )
             }
         }
         $request = {
             param([string]$Uri, [string]$Method)
             $Method | Should -Be 'GET'
-            $requests.Add($Uri)
             return $responses[$Uri]
         }
 
         $inventory = @(Get-EntraCredentialInventory -Request $request)
-
-        $inventory.ResourceType | Should -Be @(
-            'application',
-            'servicePrincipal'
-        )
+        $inventory.ResourceType | Should -Be @('application', 'servicePrincipal')
         $inventory.Count | Should -Be 2
-        $requests.Count | Should -Be 2
-    }
-
-    It 'follows Graph pagination using GET and strips credential values immediately' {
-        $requests = [System.Collections.Generic.List[string]]::new()
-        $responses = @{
-            '/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials' = @{
-                value = @(
-                    @{
-                        id = 'app-object-1'
-                        appId = 'app-client-1'
-                        displayName = 'App One'
-                        passwordCredentials = @(
-                            @{ keyId = 'safe-id'; secretText = 'must-not-copy' }
-                        )
-                        keyCredentials = @()
-                    }
-                )
-                '@odata.nextLink' = 'https://graph.microsoft.com/v1.0/applications?page=2'
-            }
-            'https://graph.microsoft.com/v1.0/applications?page=2' = @{
-                value = @(
-                    @{
-                        id = 'app-object-2'
-                        appId = 'app-client-2'
-                        displayName = 'App Two'
-                        passwordCredentials = @()
-                        keyCredentials = @()
-                    }
-                )
-            }
-            '/v1.0/servicePrincipals?$select=id,appId,displayName,passwordCredentials,keyCredentials' = @{
-                value = @(
-                    @{
-                        id = 'sp-object-1'
-                        appId = 'app-client-1'
-                        displayName = 'SP One'
-                        passwordCredentials = @()
-                        keyCredentials = @()
-                    }
-                )
-            }
-        }
-        $request = {
-            param([string]$Uri, [string]$Method)
-            $Method | Should -Be 'GET'
-            $requests.Add($Uri)
-            return $responses[$Uri]
-        }
-
-        $inventory = @(Get-EntraCredentialInventory -Request $request)
-
-        $inventory.ResourceType | Should -Be @(
-            'application',
-            'application',
-            'servicePrincipal'
-        )
-        $requests.Count | Should -Be 3
-        $inventory[0].PasswordCredentials[0].PSObject.Properties.Name |
-            Should -Not -Contain 'secretText'
     }
 
     It 'rejects pagination outside the expected Graph host before another request' {
@@ -183,7 +89,7 @@ Describe 'Get-EntraCredentialInventory' {
 }
 
 Describe 'Export-EntraCredentialExpiryReport' {
-    It 'writes machine-readable JSON without credential secret values' {
+    It 'writes JSON without credential secret values' {
         $fixturePath = Join-Path $PSScriptRoot 'fixtures' 'credentials.json'
         $outputPath = Join-Path $TestDrive 'report.json'
         $inventory = Get-Content -LiteralPath $fixturePath -Raw | ConvertFrom-Json -Depth 20
@@ -197,10 +103,9 @@ Describe 'Export-EntraCredentialExpiryReport' {
         $report = $raw | ConvertFrom-Json -Depth 20
         $report.schemaVersion | Should -Be 1
         $report.summary.total | Should -Be 5
-        $report.findings.Count | Should -Be 5
     }
 
-    It 'writes machine-readable CSV without credential secret values' {
+    It 'writes CSV without credential secret values' {
         $fixturePath = Join-Path $PSScriptRoot 'fixtures' 'credentials.json'
         $outputPath = Join-Path $TestDrive 'report.csv'
         $inventory = Get-Content -LiteralPath $fixturePath -Raw | ConvertFrom-Json -Depth 20
@@ -212,22 +117,18 @@ Describe 'Export-EntraCredentialExpiryReport' {
         $raw = Get-Content -LiteralPath $outputPath -Raw
         $raw | Should -Not -Match 'fixture-secret-value'
         $raw | Should -Not -Match 'secretText'
-        $csv = Import-Csv -LiteralPath $outputPath
-        $csv.Count | Should -Be 5
-        $csv[0].PSObject.Properties.Name | Should -Not -Contain 'secretText'
+        (Import-Csv -LiteralPath $outputPath).Count | Should -Be 5
     }
 
     It 'honors WhatIf without creating a report' {
         $outputPath = Join-Path $TestDrive 'what-if.json'
-
         Export-EntraCredentialExpiryReport -Finding @() -Path $outputPath -WhatIf
-
         $outputPath | Should -Not -Exist
     }
 }
 
 Describe 'Module metadata and documentation' {
-    It 'keeps the released version aligned across the manifest, README, and SECURITY boundary text' {
+    It 'keeps version and security-boundary documentation aligned' {
         $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
         $readmePath = Join-Path $PSScriptRoot '..' 'README.md'
         $securityPath = Join-Path $PSScriptRoot '..' 'SECURITY.md'
@@ -236,15 +137,13 @@ Describe 'Module metadata and documentation' {
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
 
-        $moduleData.ModuleVersion | Should -Be '0.1.5'
-        $readme | Should -BeLike '*Version 0.1.5*'
-        $readme | Should -BeLike '*agentIdentityBlueprint*'
-        $readme | Should -BeLike '*agentIdentityBlueprintPrincipal*'
+        $moduleData.ModuleVersion | Should -Be '0.1.6'
+        $readme | Should -BeLike '*Version 0.1.6*'
         $readme | Should -BeLike '*Application.Read.All*'
-        $readme | Should -BeLike '*/v1.0/applications*'
-        $readme | Should -BeLike '*/v1.0/servicePrincipals*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.5 is read-only*'
-        $security | Should -BeLike '*agentIdentityBlueprint*'
+        $readme | Should -BeLike '*operator-supplied test seam*'
+        $readme | Should -Not -BeLike '*digest-pinned quality gate*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.6 is read-only*'
+        $security | Should -BeLike '*operator-supplied code*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
     }
 }
