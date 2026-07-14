@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.7 - 2026-07-15
+
+- Validate a supplied TenantId against the active Microsoft Graph context before built-in live collection.
+- Reject malformed tenant identifiers and ambiguous or mismatched active contexts.
+- Add offline Pester coverage for matching, missing, and mismatched context tenant identifiers.
+- Clarify existing-context scopes, callback behavior, Global Graph support, and Microsoft recommendation parity.
+- Keep the GET-only endpoints, Application.Read.All requirement, dependencies, and no-secret output boundary unchanged.
+
 ## v0.1.6 - 2026-07-14
 
 - Correct release-assurance wording to match the repository-visible CI implementation.
@@ -8,40 +16,31 @@
 
 ## v0.1.5 - 2026-07-14
 
-- Ignore `agentIdentityBlueprint` and `agentIdentityBlueprintPrincipal` placeholder objects returned by the Graph list endpoints.
-- Refresh release metadata and security wording to match the current read-only GET-only Microsoft Graph boundary.
+- Ignore agent identity placeholder objects returned by the Graph list endpoints.
+- Refresh release metadata and security wording.
 - Keep the read-only Microsoft Graph boundary and no-secret output behavior unchanged.
 
 ## v0.1.4 - 2026-07-14
 
-- Refresh release metadata and security wording to match the current read-only GET-only Microsoft Graph boundary.
-- Add a regression test that checks version alignment across the module manifest, README, and SECURITY documentation.
-- Keep the read-only Microsoft Graph boundary and no-secret output behavior unchanged.
+- Refresh release metadata and security wording.
+- Add version-alignment regression coverage.
 
 ## v0.1.3 - 2026-07-14
 
-- Add a real Pester regression test for CSV export safety.
-- Update version metadata and documentation to match the new release.
-- Keep the read-only Microsoft Graph boundary and no-secret output behavior unchanged.
+- Add a Pester regression test for CSV export safety.
+- Update release metadata and documentation.
 
 ## v0.1.2 - 2026-07-14
 
-- Docs-only release; the CSV export coverage was described but not yet implemented.
-- Keep the read-only Microsoft Graph boundary and no-secret output behavior unchanged.
-- Preserve the existing GET-only application and service-principal inventory flow.
+- Docs-only release; CSV export coverage was described but not yet implemented.
 
 ## v0.1.1 - 2026-07-14
 
-- Correct public repository and private vulnerability-reporting language.
-- Replace an invalid multi-path PSScriptAnalyzer example with executable commands.
-- Align CI PowerShell indentation and module metadata with version 0.1.1.
-- Keep the GET-only Microsoft Graph behavior and Application.Read.All boundary unchanged.
+- Correct repository and vulnerability-reporting language.
+- Correct PSScriptAnalyzer examples and align metadata.
 
 ## v0.1.0 - 2026-07-14
 
 - Add GET-only application and service-principal credential inventory.
-- Add deterministic expired, critical, warning, healthy, and unknown classification.
-- Add JSON and CSV reporting without credential values.
-- Add Graph pagination with strict HTTPS host and resource-path validation.
-- Add an offline test runner, Pester coverage, PSScriptAnalyzer CI, and pinned checkout action.
-- Document least privilege, report handling, release invariants, and candidate follow-up tools.
+- Add deterministic expiry classification and JSON/CSV reporting.
+- Add strict Graph pagination validation and offline quality gates.

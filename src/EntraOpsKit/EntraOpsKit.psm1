@@ -10,7 +10,7 @@ function Get-EntraCredentialInventory {
         [scriptblock]$Request,
 
         [Parameter()]
-        [ValidatePattern('^[0-9a-fA-F-]{36}$')]
+        [ValidatePattern('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')]
         [string]$TenantId
     )
 
@@ -29,7 +29,7 @@ function Get-EntraCredentialInventory {
             Connect-MgGraph @connectParameters | Out-Null
             $context = Get-MgContext
         }
-        Assert-EntraReadContext -Context $context
+        Assert-EntraReadContext -Context $context -TenantId $TenantId
         $Request = {
             param([string]$Uri, [string]$Method)
             Invoke-MgGraphRequest -Method $Method -Uri $Uri -OutputType PSObject
@@ -91,15 +91,12 @@ function Get-EntraCredentialExpiryFinding {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [object]$InputObject,
-
         [Parameter()]
         [ValidateRange(1, 3650)]
         [int]$WarningDays = 30,
-
         [Parameter()]
         [ValidateRange(0, 3650)]
         [int]$CriticalDays = 7,
-
         [Parameter()]
         [DateTimeOffset]$Now = [DateTimeOffset]::UtcNow
     )
@@ -115,29 +112,14 @@ function Get-EntraCredentialExpiryFinding {
     process {
         foreach ($resource in @($InputObject)) {
             $credentialGroups = @(
-                @{
-                    Type = 'clientSecret'
-                    Values = @(Get-EntraPropertyValue $resource 'PasswordCredentials')
-                },
-                @{
-                    Type = 'certificate'
-                    Values = @(Get-EntraPropertyValue $resource 'KeyCredentials')
-                }
+                @{ Type = 'clientSecret'; Values = @(Get-EntraPropertyValue $resource 'PasswordCredentials') },
+                @{ Type = 'certificate'; Values = @(Get-EntraPropertyValue $resource 'KeyCredentials') }
             )
             foreach ($group in $credentialGroups) {
                 foreach ($credential in $group.Values) {
-                    $endDate = ConvertTo-EntraDateTimeOffset -Value (
-                        Get-EntraPropertyValue $credential 'EndDateTime'
-                    )
-                    $startDate = ConvertTo-EntraDateTimeOffset -Value (
-                        Get-EntraPropertyValue $credential 'StartDateTime'
-                    )
-                    $daysRemaining = if ($null -eq $endDate) {
-                        $null
-                    }
-                    else {
-                        [Math]::Floor(($endDate - $Now).TotalDays)
-                    }
+                    $endDate = ConvertTo-EntraDateTimeOffset -Value (Get-EntraPropertyValue $credential 'EndDateTime')
+                    $startDate = ConvertTo-EntraDateTimeOffset -Value (Get-EntraPropertyValue $credential 'StartDateTime')
+                    $daysRemaining = if ($null -eq $endDate) { $null } else { [Math]::Floor(($endDate - $Now).TotalDays) }
                     $severity = if ($null -eq $daysRemaining) {
                         'unknown'
                     }
@@ -192,11 +174,9 @@ function Export-EntraCredentialExpiryReport {
         [Parameter(Mandatory = $true)]
         [AllowEmptyCollection()]
         [object[]]$Finding,
-
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$Path,
-
         [Parameter()]
         [ValidateSet('Json', 'Csv')]
         [string]$Format = 'Json'
@@ -209,32 +189,34 @@ function Export-EntraCredentialExpiryReport {
     if ($parent -and -not (Test-Path -LiteralPath $parent)) {
         New-Item -ItemType Directory -Path $parent -Force | Out-Null
     }
-
     if ($Format -eq 'Csv') {
         $Finding | Export-Csv -LiteralPath $Path -NoTypeInformation -Encoding utf8BOM
         return Get-Item -LiteralPath $Path
     }
 
     $summary = [ordered]@{
-        total    = $Finding.Count
-        expired  = @($Finding | Where-Object Severity -eq 'expired').Count
+        total = $Finding.Count
+        expired = @($Finding | Where-Object Severity -eq 'expired').Count
         critical = @($Finding | Where-Object Severity -eq 'critical').Count
-        warning  = @($Finding | Where-Object Severity -eq 'warning').Count
-        healthy  = @($Finding | Where-Object Severity -eq 'healthy').Count
-        unknown  = @($Finding | Where-Object Severity -eq 'unknown').Count
+        warning = @($Finding | Where-Object Severity -eq 'warning').Count
+        healthy = @($Finding | Where-Object Severity -eq 'healthy').Count
+        unknown = @($Finding | Where-Object Severity -eq 'unknown').Count
     }
     $report = [ordered]@{
         schemaVersion = 1
-        generatedAt   = [DateTimeOffset]::UtcNow.ToString('o')
-        summary       = $summary
-        findings      = @($Finding)
+        generatedAt = [DateTimeOffset]::UtcNow.ToString('o')
+        summary = $summary
+        findings = @($Finding)
     }
     $report | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $Path -Encoding utf8BOM
     Get-Item -LiteralPath $Path
 }
 
 function Assert-EntraReadContext {
-    param([object]$Context)
+    param(
+        [object]$Context,
+        [string]$TenantId
+    )
 
     if ($null -eq $Context) {
         throw 'Microsoft Graph authentication did not produce a context.'
@@ -243,30 +225,29 @@ function Assert-EntraReadContext {
     if ($scopes -notcontains $script:ApplicationReadScope) {
         throw "The active Microsoft Graph context must include '$script:ApplicationReadScope'."
     }
+    if ($TenantId) {
+        $contextTenantId = [string](Get-EntraPropertyValue -InputObject $Context -Name 'TenantId')
+        $activeTenant = [guid]::Empty
+        if ([string]::IsNullOrWhiteSpace($contextTenantId) -or
+            -not [guid]::TryParse($contextTenantId, [ref]$activeTenant)) {
+            throw 'The active Microsoft Graph context does not identify a valid tenant.'
+        }
+        if ($activeTenant -ne [guid]$TenantId) {
+            throw "The active Microsoft Graph context tenant does not match requested TenantId '$TenantId'."
+        }
+    }
 }
 
 function Assert-EntraGraphReadUri {
-    param(
-        [string]$Uri,
-        [string]$ResourcePath
-    )
-
+    param([string]$Uri, [string]$ResourcePath)
     if ([Uri]::IsWellFormedUriString($Uri, [UriKind]::Absolute)) {
         $parsed = [Uri]$Uri
-        $allowed = (
-            $parsed.Scheme -eq 'https' -and
-            $parsed.Host -eq $script:GlobalGraphHost -and
-            $parsed.IsDefaultPort -and
-            $parsed.UserInfo -eq '' -and
-            $parsed.Fragment -eq '' -and
-            $parsed.AbsolutePath -eq $ResourcePath
-        )
+        $allowed = ($parsed.Scheme -eq 'https' -and $parsed.Host -eq $script:GlobalGraphHost -and $parsed.IsDefaultPort -and $parsed.UserInfo -eq '' -and $parsed.Fragment -eq '' -and $parsed.AbsolutePath -eq $ResourcePath)
         if (-not $allowed) {
             throw "Microsoft Graph pagination URI is outside '$ResourcePath'."
         }
         return
     }
-
     if ($Uri -ne $ResourcePath -and -not $Uri.StartsWith("${ResourcePath}?")) {
         throw "Microsoft Graph request URI is outside '$ResourcePath'."
     }
@@ -274,7 +255,6 @@ function Assert-EntraGraphReadUri {
 
 function Test-EntraGraphSupportedResource {
     param([object]$InputObject)
-
     $odataType = [string](Get-EntraPropertyValue -InputObject $InputObject -Name '@odata.type')
     switch ($odataType) {
         '#microsoft.graph.agentIdentityBlueprint' { return $false }
@@ -285,56 +265,36 @@ function Test-EntraGraphSupportedResource {
 
 function ConvertTo-EntraCredentialRecord {
     param([object[]]$InputObject)
-
     foreach ($item in $InputObject) {
-        if ($null -eq $item) {
-            continue
-        }
+        if ($null -eq $item) { continue }
         [pscustomobject]@{
-            DisplayName   = [string](Get-EntraPropertyValue $item 'displayName')
-            KeyId         = [string](Get-EntraPropertyValue $item 'keyId')
+            DisplayName = [string](Get-EntraPropertyValue $item 'displayName')
+            KeyId = [string](Get-EntraPropertyValue $item 'keyId')
             StartDateTime = Get-EntraPropertyValue $item 'startDateTime'
-            EndDateTime   = Get-EntraPropertyValue $item 'endDateTime'
-            Type          = [string](Get-EntraPropertyValue $item 'type')
-            Usage         = [string](Get-EntraPropertyValue $item 'usage')
+            EndDateTime = Get-EntraPropertyValue $item 'endDateTime'
+            Type = [string](Get-EntraPropertyValue $item 'type')
+            Usage = [string](Get-EntraPropertyValue $item 'usage')
         }
     }
 }
 
 function ConvertTo-EntraDateTimeOffset {
     param([object]$Value)
-
-    if ($null -eq $Value -or [string]::IsNullOrWhiteSpace([string]$Value)) {
-        return $null
-    }
+    if ($null -eq $Value -or [string]::IsNullOrWhiteSpace([string]$Value)) { return $null }
     try {
-        return [DateTimeOffset]::Parse(
-            [string]$Value,
-            [Globalization.CultureInfo]::InvariantCulture,
-            [Globalization.DateTimeStyles]::AssumeUniversal
-        ).ToUniversalTime()
+        return [DateTimeOffset]::Parse([string]$Value, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AssumeUniversal).ToUniversalTime()
     }
-    catch {
-        return $null
-    }
+    catch { return $null }
 }
 
 function Get-EntraPropertyValue {
     param(
-        [Parameter(Mandatory = $true)]
-        [object]$InputObject,
-
-        [Parameter(Mandatory = $true)]
-        [string]$Name
+        [Parameter(Mandatory = $true)][object]$InputObject,
+        [Parameter(Mandatory = $true)][string]$Name
     )
-
-    if ($InputObject -is [System.Collections.IDictionary]) {
-        return $InputObject[$Name]
-    }
+    if ($InputObject -is [System.Collections.IDictionary]) { return $InputObject[$Name] }
     $property = $InputObject.PSObject.Properties[$Name]
-    if ($null -ne $property) {
-        return $property.Value
-    }
+    if ($null -ne $property) { return $property.Value }
     return $null
 }
 
