@@ -1,8 +1,14 @@
 # Changelog
 
+## v0.1.3 - 2026-07-14
+
+- Add a real Pester regression test for CSV export safety.
+- Update version metadata and documentation to match the new release.
+- Keep the read-only Microsoft Graph boundary and no-secret output behavior unchanged.
+
 ## v0.1.2 - 2026-07-14
 
-- Add explicit CSV export regression coverage to the Pester suite.
+- Docs-only release; the CSV export coverage was described but not yet implemented.
 - Keep the read-only Microsoft Graph boundary and no-secret output behavior unchanged.
 - Preserve the existing GET-only application and service-principal inventory flow.
 
@@ -11,7 +17,7 @@
 - Correct public repository and private vulnerability-reporting language.
 - Replace an invalid multi-path PSScriptAnalyzer example with executable commands.
 - Align CI PowerShell indentation and module metadata with version 0.1.1.
-- Keep the GET-only Microsoft Graph behavior and `Application.Read.All` boundary unchanged.
+- Keep the GET-only Microsoft Graph behavior and Application.Read.All boundary unchanged.
 
 ## v0.1.0 - 2026-07-14
 

@@ -1,4 +1,4 @@
-﻿BeforeAll {
+BeforeAll {
     $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
     Import-Module $modulePath -Force
 }
@@ -137,6 +137,23 @@ Describe 'Export-EntraCredentialExpiryReport' {
         $report.schemaVersion | Should -Be 1
         $report.summary.total | Should -Be 5
         $report.findings.Count | Should -Be 5
+    }
+
+    It 'writes machine-readable CSV without credential secret values' {
+        $fixturePath = Join-Path $PSScriptRoot 'fixtures' 'credentials.json'
+        $outputPath = Join-Path $TestDrive 'report.csv'
+        $inventory = Get-Content -LiteralPath $fixturePath -Raw | ConvertFrom-Json -Depth 20
+        $now = [DateTimeOffset]::Parse('2026-07-14T00:00:00Z')
+        $findings = @($inventory | Get-EntraCredentialExpiryFinding -Now $now)
+
+        Export-EntraCredentialExpiryReport -Finding $findings -Path $outputPath -Format Csv
+
+        $raw = Get-Content -LiteralPath $outputPath -Raw
+        $raw | Should -Not -Match 'fixture-secret-value'
+        $raw | Should -Not -Match 'secretText'
+        $csv = Import-Csv -LiteralPath $outputPath
+        $csv.Count | Should -Be 5
+        $csv[0].PSObject.Properties.Name | Should -Not -Contain 'secretText'
     }
 
     It 'honors WhatIf without creating a report' {
