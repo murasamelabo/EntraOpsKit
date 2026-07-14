@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## v0.1.1 - 2026-07-14
+
+- Correct public repository and private vulnerability-reporting language.
+- Replace an invalid multi-path PSScriptAnalyzer example with executable commands.
+- Align CI PowerShell indentation and module metadata with version 0.1.1.
+- Keep the GET-only Microsoft Graph behavior and `Application.Read.All` boundary unchanged.
+
 ## v0.1.0 - 2026-07-14
 
 - Add GET-only application and service-principal credential inventory.

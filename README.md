@@ -4,7 +4,7 @@ EntraOpsKit is a collection of narrowly scoped, read-only Microsoft Entra operat
 release is produced by an auditable AutoStudio research-to-release cycle and must pass an offline,
 digest-pinned quality gate before publication.
 
-Version 0.1.0 provides a credential expiry auditor for application registrations and service
+Version 0.1.1 provides a credential expiry auditor for application registrations and service
 principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It
 does not create, rotate, remove, or update credentials.
 
@@ -63,16 +63,23 @@ pwsh -NoLogo -NoProfile -File ./tests/Run-OfflineTests.ps1
 The fuller development suite uses Pester 6 and PSScriptAnalyzer:
 
 ```powershell
-Invoke-ScriptAnalyzer -Path ./src, ./tests -Recurse -Severity Warning
+$findings = @(
+    Invoke-ScriptAnalyzer -Path ./src -Recurse -Severity Warning
+    Invoke-ScriptAnalyzer -Path ./tests -Recurse -Severity Warning
+)
+if ($findings.Count -gt 0) {
+    $findings | Format-Table -AutoSize
+    throw "PSScriptAnalyzer reported $($findings.Count) finding(s)."
+}
 Invoke-Pester -Path ./tests/CredentialExpiry.Tests.ps1 -Output Detailed
 ```
 
 ## Provenance
 
 The first release was selected from three candidates using deterministic impact, urgency,
-feasibility, and safety scoring. AutoStudio recorded the official Microsoft Learn evidence, five
-completed lifecycle stages, quality evidence, commit SHA, and GitHub release URL in its durable
-program ledger.
+feasibility, and safety scoring. AutoStudio records official Microsoft Learn evidence, five
+completed lifecycle stages, quality evidence, commit SHA, and GitHub release URL in its local
+durable program ledger.
 
 See [ROADMAP.md](ROADMAP.md) for candidate follow-up tools and [SECURITY.md](SECURITY.md) for the
 security boundary.
