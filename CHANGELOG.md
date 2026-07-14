@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.4 - 2026-07-14
+
+- Refresh release metadata and security wording to match the current read-only GET-only Microsoft Graph boundary.
+- Add a regression test that checks version alignment across the module manifest, README, and SECURITY documentation.
+- Keep the read-only Microsoft Graph boundary and no-secret output behavior unchanged.
+
 ## v0.1.3 - 2026-07-14
 
 - Add a real Pester regression test for CSV export safety.

@@ -164,3 +164,23 @@ Describe 'Export-EntraCredentialExpiryReport' {
         $outputPath | Should -Not -Exist
     }
 }
+
+Describe 'Module metadata and documentation' {
+    It 'keeps the released version aligned across the manifest, README, and SECURITY boundary text' {
+        $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
+        $readmePath = Join-Path $PSScriptRoot '..' 'README.md'
+        $securityPath = Join-Path $PSScriptRoot '..' 'SECURITY.md'
+
+        $moduleData = Import-PowerShellDataFile $modulePath
+        $readme = Get-Content -LiteralPath $readmePath -Raw
+        $security = Get-Content -LiteralPath $securityPath -Raw
+
+        $moduleData.ModuleVersion | Should -Be '0.1.4'
+        $readme | Should -BeLike '*Version 0.1.4*'
+        $readme | Should -BeLike '*Application.Read.All*'
+        $readme | Should -BeLike '*/v1.0/applications*'
+        $readme | Should -BeLike '*/v1.0/servicePrincipals*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.4 is read-only*'
+        $security | Should -BeLike '*GET endpoints for applications and service principals*'
+    }
+}

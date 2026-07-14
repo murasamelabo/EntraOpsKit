@@ -7,9 +7,9 @@ use and generated reports remain the operator's controlled responsibility.
 
 ## Security Boundary
 
-EntraOpsKit 0.1.1 is read-only. Its live collector calls only Microsoft Graph `GET` endpoints for
-applications and service principals. It requests `Application.Read.All`, rejects pagination outside
-the expected Global Microsoft Graph host and resource path, and never emits credential secret or
+EntraOpsKit 0.1.4 is read-only. Its live collector calls only Microsoft Graph GET endpoints for
+applications and service principals, requests Application.Read.All, rejects pagination outside the
+expected Global Microsoft Graph host and resource path, and never emits credential secret or
 certificate values.
 
 The report still contains tenant identifiers and operational metadata. Keep reports in approved

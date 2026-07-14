@@ -2,7 +2,7 @@
 
 EntraOpsKit is a collection of narrowly scoped, read-only Microsoft Entra operations tools. Each release is produced by an auditable AutoStudio research-to-release cycle and must pass an offline, digest-pinned quality gate before publication.
 
-Version 0.1.3 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials.
+Version 0.1.4 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials.
 
 ## Requirements
 
