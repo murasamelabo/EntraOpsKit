@@ -79,6 +79,19 @@ Describe 'Get-EntraCredentialInventory' {
         )
     }
 
+    It 'rejects equivalent relative and absolute pagination URIs before a duplicate request' {
+        $requests = [System.Collections.Generic.List[string]]::new()
+        $absoluteInitial = 'https://graph.microsoft.com/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials'
+        $request = {
+            param([string]$Uri, [string]$Method)
+            $Method | Should -Be 'GET'
+            $requests.Add($Uri)
+            return @{ value = @(); '@odata.nextLink' = $absoluteInitial }
+        }
+        { Get-EntraCredentialInventory -Request $request } | Should -Throw '*pagination URI was repeated*'
+        $requests | Should -Be @('/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials')
+    }
+
     It 'rejects a malformed tenant identifier before invoking a callback' {
         $called = $false
         $request = { $called = $true }
@@ -145,12 +158,12 @@ Describe 'Module metadata and documentation' {
         $moduleData = Import-PowerShellDataFile $modulePath
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
-        $moduleData.ModuleVersion | Should -Be '0.1.8'
-        $readme | Should -BeLike '*Version 0.1.8*'
+        $moduleData.ModuleVersion | Should -Be '0.1.9'
+        $readme | Should -BeLike '*Version 0.1.9*'
         $readme | Should -BeLike '*Application.Read.All*'
         $readme | Should -BeLike '*operator-supplied test seam*'
-        $readme | Should -BeLike '*Repeated pagination links are rejected*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.8 is read-only*'
+        $readme | Should -BeLike '*Equivalent relative and absolute pagination links are treated as repeated*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.9 is read-only*'
         $security | Should -BeLike '*requested TenantId*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
     }

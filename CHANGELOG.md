@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.9 - 2026-07-15
+
+- Canonicalize validated Global Graph pagination URIs for cycle tracking.
+- Reject equivalent relative and absolute repeated links before invoking another request.
+- Add offline Pester coverage for the equivalent-link cycle.
+- Keep GET-only endpoints, Application.Read.All, dependencies, output fields, and the no-secret boundary unchanged.
+
 ## v0.1.8 - 2026-07-15
 
 - Reject an exact repeated Microsoft Graph pagination URI before invoking another request.

@@ -53,10 +53,11 @@ function Get-EntraCredentialInventory {
         $uri = $query.Uri
         $visitedUris = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
         while ($uri) {
-            if (-not $visitedUris.Add([string]$uri)) {
+            Assert-EntraGraphReadUri -Uri $uri -ResourcePath $query.Path
+            $requestKey = Get-EntraGraphReadUriKey -Uri $uri
+            if (-not $visitedUris.Add($requestKey)) {
                 throw "Microsoft Graph pagination URI was repeated for '$($query.Path)'."
             }
-            Assert-EntraGraphReadUri -Uri $uri -ResourcePath $query.Path
             $response = & $Request -Uri $uri -Method 'GET'
             if ($null -eq $response) {
                 throw "Microsoft Graph returned no response for '$uri'."
@@ -255,6 +256,18 @@ function Assert-EntraGraphReadUri {
     if ($Uri -ne $ResourcePath -and -not $Uri.StartsWith("${ResourcePath}?")) {
         throw "Microsoft Graph request URI is outside '$ResourcePath'."
     }
+}
+
+function Get-EntraGraphReadUriKey {
+    param([string]$Uri)
+    $baseUri = [Uri]"https://$script:GlobalGraphHost/"
+    $parsed = if ([Uri]::IsWellFormedUriString($Uri, [UriKind]::Absolute)) {
+        [Uri]$Uri
+    }
+    else {
+        [Uri]::new($baseUri, $Uri)
+    }
+    return $parsed.AbsoluteUri
 }
 
 function Test-EntraGraphSupportedResource {
