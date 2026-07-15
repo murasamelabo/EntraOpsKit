@@ -45,21 +45,6 @@ Describe 'Get-EntraCredentialInventory' {
         $inventory.Count | Should -Be 2
     }
 
-    It 'rejects pagination outside the expected Graph host before another request' {
-        $requests = [System.Collections.Generic.List[string]]::new()
-        $request = {
-            param([string]$Uri, [string]$Method)
-            $Method | Should -Be 'GET'
-            $requests.Add($Uri)
-            if ($Uri.StartsWith('/v1.0/applications')) {
-                return @{ value = @(); '@odata.nextLink' = 'https://example.invalid/collect' }
-            }
-            return @{ value = @() }
-        }
-        { Get-EntraCredentialInventory -Request $request } | Should -Throw '*pagination URI is outside*'
-        $requests.Count | Should -Be 1
-    }
-
     It 'rejects a repeated pagination URI before invoking it again' {
         $requests = [System.Collections.Generic.List[string]]::new()
         $pageTwo = 'https://graph.microsoft.com/v1.0/applications?page=2'
@@ -90,6 +75,39 @@ Describe 'Get-EntraCredentialInventory' {
         }
         { Get-EntraCredentialInventory -Request $request } | Should -Throw '*pagination URI was repeated*'
         $requests | Should -Be @('/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials')
+    }
+
+    It 'rejects <Name> before invoking another request' -TestCases @(
+        @{ Name = 'a non-HTTPS URI'; NextLink = 'http://graph.microsoft.com/v1.0/applications?page=2' },
+        @{ Name = 'an unexpected host'; NextLink = 'https://example.invalid/v1.0/applications?page=2' },
+        @{ Name = 'a non-default port'; NextLink = 'https://graph.microsoft.com:444/v1.0/applications?page=2' },
+        @{ Name = 'URI user information'; NextLink = 'https://user@graph.microsoft.com/v1.0/applications?page=2' },
+        @{ Name = 'a URI fragment'; NextLink = 'https://graph.microsoft.com/v1.0/applications?page=2#fragment' },
+        @{ Name = 'an absolute resource-path escape'; NextLink = 'https://graph.microsoft.com/v1.0/applications/extra?page=2' },
+        @{ Name = 'a relative resource-path escape'; NextLink = '/v1.0/applications/extra?page=2' }
+    ) {
+        param($Name, $NextLink)
+        $requests = [System.Collections.Generic.List[string]]::new()
+        $request = {
+            param([string]$Uri, [string]$Method)
+            $Method | Should -Be 'GET'
+            $requests.Add($Uri)
+            return @{ value = @(); '@odata.nextLink' = $NextLink }
+        }
+        { Get-EntraCredentialInventory -Request $request } | Should -Throw '*outside*'
+        $requests.Count | Should -Be 1
+    }
+
+    It 'rejects a null Graph response without issuing another request' {
+        $requests = [System.Collections.Generic.List[string]]::new()
+        $request = {
+            param([string]$Uri, [string]$Method)
+            $Method | Should -Be 'GET'
+            $requests.Add($Uri)
+            return $null
+        }
+        { Get-EntraCredentialInventory -Request $request } | Should -Throw '*returned no response*'
+        $requests.Count | Should -Be 1
     }
 
     It 'rejects a malformed tenant identifier before invoking a callback' {
@@ -158,12 +176,12 @@ Describe 'Module metadata and documentation' {
         $moduleData = Import-PowerShellDataFile $modulePath
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
-        $moduleData.ModuleVersion | Should -Be '0.1.9'
-        $readme | Should -BeLike '*Version 0.1.9*'
+        $moduleData.ModuleVersion | Should -Be '0.1.10'
+        $readme | Should -BeLike '*Version 0.1.10*'
         $readme | Should -BeLike '*Application.Read.All*'
         $readme | Should -BeLike '*operator-supplied test seam*'
         $readme | Should -BeLike '*Equivalent relative and absolute pagination links are treated as repeated*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.9 is read-only*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.10 is read-only*'
         $security | Should -BeLike '*requested TenantId*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
     }

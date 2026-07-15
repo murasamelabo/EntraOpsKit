@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.10 - 2026-07-15
+
+- Expand offline Pester coverage for pagination schemes, hosts, ports, user information, fragments, and resource-path escapes.
+- Verify invalid pagination and null responses stop with exact callback invocation counts.
+- Keep runtime behavior, GET-only endpoints, Application.Read.All, dependencies, output fields, and the no-secret boundary unchanged.
+
 ## v0.1.9 - 2026-07-15
 
 - Canonicalize validated Global Graph pagination URIs for cycle tracking.
