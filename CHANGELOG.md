@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.15 - 2026-07-16
+
+- Clarify that the built-in Microsoft Graph behavior is tenant-read-only rather than filesystem-read-only.
+- State explicitly that report export writes local files and operator-supplied callbacks can have unrelated side effects.
+- Keep runtime behavior, GET-only endpoints, Application.Read.All, dependencies, and output fields unchanged.
+
 ## v0.1.14 - 2026-07-16
 
 - Clarify that Microsoft's expiring application-credential recommendation covers application registrations expiring within 30 days and treats lapsed credentials as completed.
