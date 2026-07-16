@@ -247,13 +247,25 @@ function Assert-EntraGraphReadUri {
     param([string]$Uri, [string]$ResourcePath)
     if ([Uri]::IsWellFormedUriString($Uri, [UriKind]::Absolute)) {
         $parsed = [Uri]$Uri
-        $allowed = ($parsed.Scheme -eq 'https' -and $parsed.Host -eq $script:GlobalGraphHost -and $parsed.IsDefaultPort -and $parsed.UserInfo -eq '' -and $parsed.Fragment -eq '' -and $parsed.AbsolutePath -eq $ResourcePath)
+        $allowed = (
+            [string]::Equals($parsed.Scheme, 'https', [StringComparison]::OrdinalIgnoreCase) -and
+            [string]::Equals($parsed.Host, $script:GlobalGraphHost, [StringComparison]::OrdinalIgnoreCase) -and
+            $parsed.IsDefaultPort -and
+            $parsed.UserInfo -eq '' -and
+            $parsed.Fragment -eq '' -and
+            [string]::Equals($parsed.AbsolutePath, $ResourcePath, [StringComparison]::Ordinal)
+        )
         if (-not $allowed) {
             throw "Microsoft Graph pagination URI is outside '$ResourcePath'."
         }
         return
     }
-    if ($Uri.Contains('#') -or ($Uri -ne $ResourcePath -and -not $Uri.StartsWith("${ResourcePath}?"))) {
+    if ($Uri.Contains('#')) {
+        throw "Microsoft Graph request URI is outside '$ResourcePath'."
+    }
+    $queryIndex = $Uri.IndexOf('?')
+    $relativePath = if ($queryIndex -ge 0) { $Uri.Substring(0, $queryIndex) } else { $Uri }
+    if (-not [string]::Equals($relativePath, $ResourcePath, [StringComparison]::Ordinal)) {
         throw "Microsoft Graph request URI is outside '$ResourcePath'."
     }
 }

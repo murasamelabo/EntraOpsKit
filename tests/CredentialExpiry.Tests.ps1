@@ -80,7 +80,9 @@ Describe 'Get-EntraCredentialInventory' {
         @{ Name = 'an absolute URI fragment'; NextLink = 'https://graph.microsoft.com/v1.0/applications?page=2#fragment' },
         @{ Name = 'a relative URI fragment'; NextLink = '/v1.0/applications?page=2#fragment' },
         @{ Name = 'an absolute resource-path escape'; NextLink = 'https://graph.microsoft.com/v1.0/applications/extra?page=2' },
-        @{ Name = 'a relative resource-path escape'; NextLink = '/v1.0/applications/extra?page=2' }
+        @{ Name = 'a relative resource-path escape'; NextLink = '/v1.0/applications/extra?page=2' },
+        @{ Name = 'a case-variant absolute resource path'; NextLink = 'https://graph.microsoft.com/v1.0/Applications?page=2' },
+        @{ Name = 'a case-variant relative resource path'; NextLink = '/v1.0/Applications' }
     ) {
         param($Name, $NextLink)
         $requests = [System.Collections.Generic.List[string]]::new()
@@ -172,21 +174,23 @@ Describe 'Module metadata and documentation' {
         $moduleData = Import-PowerShellDataFile $modulePath
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
-        $moduleData.ModuleVersion | Should -Be '0.1.16'
+        $moduleData.ModuleVersion | Should -Be '0.1.17'
         $moduleData.Description | Should -BeLike '*Tenant-read-only*'
-        $readme | Should -BeLike '*Version 0.1.16*'
+        $readme | Should -BeLike '*Version 0.1.17*'
         $readme | Should -BeLike '*tenant-read-only*'
         $readme | Should -BeLike '*report export writes local files*'
         $readme | Should -BeLike '*Application.Read.All*'
         $readme | Should -BeLike '*operator-supplied test seam*'
         $readme | Should -BeLike '*Relative and absolute pagination links containing fragments are rejected*'
+        $readme | Should -BeLike '*case-variant resource paths are rejected*'
         $readme | Should -BeLike '*Spreadsheet software can interpret values beginning with formula markers as spreadsheet formulas*'
         $readme | Should -BeLike '*does not inspect or sanitize arbitrary input properties*'
         $readme | Should -BeLike '*treats credentials whose expiration has lapsed as completed*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.16 is tenant-read-only*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.17 is tenant-read-only*'
         $security | Should -BeLike '*does not mean filesystem-read-only*'
         $security | Should -BeLike '*requested TenantId*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
+        $security | Should -BeLike '*case-variant resource paths*'
         $security | Should -BeLike '*CSV reports preserve tenant-controlled text and do not neutralize spreadsheet formulas*'
         $security | Should -BeLike '*does not sanitize arbitrary objects*'
     }

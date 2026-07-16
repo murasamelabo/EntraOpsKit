@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.17 - 2026-07-16
+
+- Require exact ordinal resource-path matching for absolute and relative Microsoft Graph pagination links.
+- Reject case-variant resource paths before invoking the request callback and add offline Pester coverage for exact request counts.
+- Keep GET-only endpoints, Application.Read.All, dependencies, output fields, and the no-secret boundary unchanged.
+
 ## v0.1.16 - 2026-07-16
 
 - Remove existing-context tenant validation from the roadmap because it shipped in v0.1.7.
