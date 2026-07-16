@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.13 - 2026-07-16
+
+- Clarify that built-in inventory and finding generation omit credential values.
+- Document that the report exporter serializes caller-supplied properties and does not sanitize arbitrary objects.
+- Keep runtime behavior, GET-only endpoints, Application.Read.All, dependencies, and output fields unchanged.
+
 ## v0.1.12 - 2026-07-16
 
 - Document that CSV tenant metadata can be interpreted as spreadsheet formulas.

@@ -6,7 +6,9 @@ The latest release is supported. Source and release artifacts are publicly inspe
 
 ## Security Boundary
 
-EntraOpsKit 0.1.12 is read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals, requires Application.Read.All, rejects pagination outside the expected Global Microsoft Graph host and resource path, rejects non-HTTPS links, non-default ports, user information, fragments in absolute or relative pagination links, and repeated pagination URIs per resource after canonicalizing equivalent relative and absolute Global Graph forms. It ignores documented agent-identity placeholder objects and never emits credential secret or certificate values.
+EntraOpsKit 0.1.13 is read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals, requires Application.Read.All, rejects pagination outside the expected Global Microsoft Graph host and resource path, rejects non-HTTPS links, non-default ports, user information, fragments in absolute or relative pagination links, and repeated pagination URIs per resource after canonicalizing equivalent relative and absolute Global Graph forms. It ignores documented agent-identity placeholder objects.
+
+Built-in inventory and finding generation copy credential metadata but do not copy password secret text, certificate key material, or other credential values. `Export-EntraCredentialExpiryReport` serializes caller-supplied object properties as provided and does not sanitize arbitrary objects. Callers must export only module-generated findings or other reviewed objects that contain no secrets.
 
 When the module establishes a connection, it requests Application.Read.All with process-scoped context. An existing operator context can contain broader scopes. Regardless of those scopes, built-in collection remains restricted to the documented GET endpoints. When a requested TenantId is supplied, the active context must identify the same tenant before collection begins.
 
