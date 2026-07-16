@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.14 - 2026-07-16
+
+- Clarify that Microsoft's expiring application-credential recommendation covers application registrations expiring within 30 days and treats lapsed credentials as completed.
+- Preserve the distinction that this tool also reports service-principal and already expired credentials with configurable thresholds.
+- Keep runtime behavior, GET-only endpoints, Application.Read.All, dependencies, and output fields unchanged.
+
 ## v0.1.13 - 2026-07-16
 
 - Clarify that built-in inventory and finding generation omit credential values.

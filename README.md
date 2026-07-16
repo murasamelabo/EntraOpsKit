@@ -2,7 +2,7 @@
 
 EntraOpsKit is a collection of narrowly scoped, read-only Microsoft Entra operations tools. Version-pinned CI dependencies, offline project tests, Pester, and PSScriptAnalyzer provide release checks before publication.
 
-Version 0.1.13 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials. When `TenantId` is supplied for built-in live collection, the active Microsoft Graph context must identify that tenant before collection begins. Repeated pagination links are rejected before another request is issued, including equivalent relative and absolute Global Graph links. Relative and absolute pagination links containing fragments are rejected before callback invocation.
+Version 0.1.14 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials. When `TenantId` is supplied for built-in live collection, the active Microsoft Graph context must identify that tenant before collection begins. Repeated pagination links are rejected before another request is issued, including equivalent relative and absolute Global Graph links. Relative and absolute pagination links containing fragments are rejected before callback invocation.
 
 ## Requirements
 
@@ -32,7 +32,7 @@ Absolute pagination links must use HTTPS, the graph.microsoft.com host, the defa
 
 If `TenantId` is supplied, built-in live collection compares it with the active context's tenant before issuing an inventory request. The optional `Request` scriptblock is an operator-supplied test seam that bypasses module-managed authentication and context validation. URI and GET method arguments are validated before callback invocation, but unrelated callback behavior cannot be constrained. Use only trusted callback code.
 
-The default 30-day warning window is operationally similar to Microsoft's expiring application-credential recommendation, but this tool is not an implementation of that recommendation. It also covers service-principal credentials, reports already expired credentials, and permits configurable thresholds.
+The default 30-day warning window is operationally similar to Microsoft's expiring application-credential recommendation, but this tool is not an implementation of that recommendation. Microsoft's recommendation covers application-registration credentials expiring within 30 days and treats credentials whose expiration has lapsed as completed. This tool also covers service-principal credentials, reports already expired credentials, and permits configurable thresholds.
 
 ## Output Safety
 
