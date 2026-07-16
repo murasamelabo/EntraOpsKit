@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.12 - 2026-07-16
+
+- Document that CSV tenant metadata can be interpreted as spreadsheet formulas.
+- Recommend JSON or text-only CSV import when spreadsheet processing is required.
+- Keep runtime behavior, GET-only endpoints, Application.Read.All, dependencies, and output fields unchanged.
+
 ## v0.1.11 - 2026-07-16
 
 - Reject fragments in relative Microsoft Graph pagination links before callback invocation.

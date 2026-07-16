@@ -2,7 +2,7 @@
 
 EntraOpsKit is a collection of narrowly scoped, read-only Microsoft Entra operations tools. Version-pinned CI dependencies, offline project tests, Pester, and PSScriptAnalyzer provide release checks before publication.
 
-Version 0.1.11 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials. When `TenantId` is supplied for built-in live collection, the active Microsoft Graph context must identify that tenant before collection begins. Repeated pagination links are rejected before another request is issued, including equivalent relative and absolute Global Graph links. Relative and absolute pagination links containing fragments are rejected before callback invocation.
+Version 0.1.12 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials. When `TenantId` is supplied for built-in live collection, the active Microsoft Graph context must identify that tenant before collection begins. Repeated pagination links are rejected before another request is issued, including equivalent relative and absolute Global Graph links. Relative and absolute pagination links containing fragments are rejected before callback invocation.
 
 ## Requirements
 
@@ -37,6 +37,8 @@ The default 30-day warning window is operationally similar to Microsoft's expiri
 ## Output Safety
 
 Findings contain resource and credential identifiers, names, types, timestamps, days remaining, and severity. Password or certificate values are never copied. Treat reports as tenant data.
+
+CSV preserves tenant-controlled text. Spreadsheet software can interpret values beginning with formula markers as spreadsheet formulas. Prefer JSON when spreadsheet processing is unnecessary. If CSV is required, import every column as text or review and sanitize the report using an approved process before opening it in spreadsheet software.
 
 ## Verify
 

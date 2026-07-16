@@ -177,13 +177,15 @@ Describe 'Module metadata and documentation' {
         $moduleData = Import-PowerShellDataFile $modulePath
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
-        $moduleData.ModuleVersion | Should -Be '0.1.11'
-        $readme | Should -BeLike '*Version 0.1.11*'
+        $moduleData.ModuleVersion | Should -Be '0.1.12'
+        $readme | Should -BeLike '*Version 0.1.12*'
         $readme | Should -BeLike '*Application.Read.All*'
         $readme | Should -BeLike '*operator-supplied test seam*'
         $readme | Should -BeLike '*Relative and absolute pagination links containing fragments are rejected*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.11 is read-only*'
+        $readme | Should -BeLike '*Spreadsheet software can interpret values beginning with formula markers as spreadsheet formulas*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.12 is read-only*'
         $security | Should -BeLike '*requested TenantId*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
+        $security | Should -BeLike '*CSV reports preserve tenant-controlled text and do not neutralize spreadsheet formulas*'
     }
 }
