@@ -82,7 +82,8 @@ Describe 'Get-EntraCredentialInventory' {
         @{ Name = 'an unexpected host'; NextLink = 'https://example.invalid/v1.0/applications?page=2' },
         @{ Name = 'a non-default port'; NextLink = 'https://graph.microsoft.com:444/v1.0/applications?page=2' },
         @{ Name = 'URI user information'; NextLink = 'https://user@graph.microsoft.com/v1.0/applications?page=2' },
-        @{ Name = 'a URI fragment'; NextLink = 'https://graph.microsoft.com/v1.0/applications?page=2#fragment' },
+        @{ Name = 'an absolute URI fragment'; NextLink = 'https://graph.microsoft.com/v1.0/applications?page=2#fragment' },
+        @{ Name = 'a relative URI fragment'; NextLink = '/v1.0/applications?page=2#fragment' },
         @{ Name = 'an absolute resource-path escape'; NextLink = 'https://graph.microsoft.com/v1.0/applications/extra?page=2' },
         @{ Name = 'a relative resource-path escape'; NextLink = '/v1.0/applications/extra?page=2' }
     ) {
@@ -176,12 +177,12 @@ Describe 'Module metadata and documentation' {
         $moduleData = Import-PowerShellDataFile $modulePath
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
-        $moduleData.ModuleVersion | Should -Be '0.1.10'
-        $readme | Should -BeLike '*Version 0.1.10*'
+        $moduleData.ModuleVersion | Should -Be '0.1.11'
+        $readme | Should -BeLike '*Version 0.1.11*'
         $readme | Should -BeLike '*Application.Read.All*'
         $readme | Should -BeLike '*operator-supplied test seam*'
-        $readme | Should -BeLike '*Equivalent relative and absolute pagination links are treated as repeated*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.10 is read-only*'
+        $readme | Should -BeLike '*Relative and absolute pagination links containing fragments are rejected*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.11 is read-only*'
         $security | Should -BeLike '*requested TenantId*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
     }

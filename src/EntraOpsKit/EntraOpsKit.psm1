@@ -253,7 +253,7 @@ function Assert-EntraGraphReadUri {
         }
         return
     }
-    if ($Uri -ne $ResourcePath -and -not $Uri.StartsWith("${ResourcePath}?")) {
+    if ($Uri.Contains('#') -or ($Uri -ne $ResourcePath -and -not $Uri.StartsWith("${ResourcePath}?"))) {
         throw "Microsoft Graph request URI is outside '$ResourcePath'."
     }
 }

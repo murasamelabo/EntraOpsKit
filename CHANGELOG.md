@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.11 - 2026-07-16
+
+- Reject fragments in relative Microsoft Graph pagination links before callback invocation.
+- Add offline Pester coverage proving a relative fragment causes no additional request.
+- Keep GET-only endpoints, Application.Read.All, dependencies, output fields, and the no-secret boundary unchanged.
+
 ## v0.1.10 - 2026-07-15
 
 - Expand offline Pester coverage for pagination schemes, hosts, ports, user information, fragments, and resource-path escapes.

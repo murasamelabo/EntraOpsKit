@@ -6,7 +6,7 @@ The latest release is supported. Source and release artifacts are publicly inspe
 
 ## Security Boundary
 
-EntraOpsKit 0.1.10 is read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals, requires Application.Read.All, rejects pagination outside the expected Global Microsoft Graph host and resource path, rejects non-HTTPS links, non-default ports, user information, fragments, and repeated pagination URIs per resource after canonicalizing equivalent relative and absolute Global Graph forms. It ignores documented agent-identity placeholder objects and never emits credential secret or certificate values.
+EntraOpsKit 0.1.11 is read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals, requires Application.Read.All, rejects pagination outside the expected Global Microsoft Graph host and resource path, rejects non-HTTPS links, non-default ports, user information, fragments in absolute or relative pagination links, and repeated pagination URIs per resource after canonicalizing equivalent relative and absolute Global Graph forms. It ignores documented agent-identity placeholder objects and never emits credential secret or certificate values.
 
 When the module establishes a connection, it requests Application.Read.All with process-scoped context. An existing operator context can contain broader scopes. Regardless of those scopes, built-in collection remains restricted to the documented GET endpoints. When a requested TenantId is supplied, the active context must identify the same tenant before collection begins.
 
