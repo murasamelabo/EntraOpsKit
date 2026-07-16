@@ -2,7 +2,7 @@
 
 EntraOpsKit is a collection of narrowly scoped, tenant-read-only Microsoft Entra operations tools. Built-in live collection does not mutate Microsoft Entra, but report export writes local files and an operator-supplied callback can have unrelated side effects. Version-pinned CI dependencies, offline project tests, Pester, and PSScriptAnalyzer provide release checks before publication.
 
-Version 0.1.15 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials. When `TenantId` is supplied for built-in live collection, the active Microsoft Graph context must identify that tenant before collection begins. Repeated pagination links are rejected before another request is issued, including equivalent relative and absolute Global Graph links. Relative and absolute pagination links containing fragments are rejected before callback invocation.
+Version 0.1.16 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials. When `TenantId` is supplied for built-in live collection, the active Microsoft Graph context must identify that tenant before collection begins. Repeated pagination links are rejected before another request is issued, including equivalent relative and absolute Global Graph links. Relative and absolute pagination links containing fragments are rejected before callback invocation.
 
 ## Requirements
 

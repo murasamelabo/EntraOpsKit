@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.16 - 2026-07-16
+
+- Remove existing-context tenant validation from the roadmap because it shipped in v0.1.7.
+- Align release metadata and version regression assertions.
+- Keep runtime behavior, GET-only endpoints, Application.Read.All, dependencies, output fields, and the no-secret boundary unchanged.
+
 ## v0.1.15 - 2026-07-16
 
 - Clarify that the built-in Microsoft Graph behavior is tenant-read-only rather than filesystem-read-only.

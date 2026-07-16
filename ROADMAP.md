@@ -14,8 +14,6 @@ read-only unless a separately reviewed policy explicitly changes the product bou
    collecting token or credential values.
 4. Certificate policy checks: flag weak operational patterns such as missing overlap windows while
    leaving rotation to administrators.
-5. Existing-context tenant validation: reject a supplied TenantId that does not match an active
-   Microsoft Graph context.
 
 ## Release Invariants
 

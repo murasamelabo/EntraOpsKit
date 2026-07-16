@@ -6,7 +6,7 @@ The latest release is supported. Source and release artifacts are publicly inspe
 
 ## Security Boundary
 
-EntraOpsKit 0.1.15 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals, requires Application.Read.All, rejects pagination outside the expected Global Microsoft Graph host and resource path, rejects non-HTTPS links, non-default ports, user information, fragments in absolute or relative pagination links, and repeated pagination URIs per resource after canonicalizing equivalent relative and absolute Global Graph forms. It ignores documented agent-identity placeholder objects.
+EntraOpsKit 0.1.16 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals, requires Application.Read.All, rejects pagination outside the expected Global Microsoft Graph host and resource path, rejects non-HTTPS links, non-default ports, user information, fragments in absolute or relative pagination links, and repeated pagination URIs per resource after canonicalizing equivalent relative and absolute Global Graph forms. It ignores documented agent-identity placeholder objects.
 
 Tenant-read-only does not mean filesystem-read-only. `Export-EntraCredentialExpiryReport` creates local directories and report files when requested by the operator.
 
