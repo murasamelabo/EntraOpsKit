@@ -2,7 +2,7 @@
 
 EntraOpsKit is a collection of narrowly scoped, tenant-read-only Microsoft Entra operations tools. Built-in live collection does not mutate Microsoft Entra, but report export writes local files and an operator-supplied callback can have unrelated side effects. Version-pinned CI dependencies, offline project tests, Pester, and PSScriptAnalyzer provide release checks before publication.
 
-Version 0.1.26 repairs the malformed Graph method-binding test with an AST-scoped static safety assertion. Runtime behavior, permissions, dependencies, endpoints, output fields, pagination controls, and the no-secret boundary are unchanged.
+Version 0.1.27 adds an AST-scoped safety assertion proving that the PowerShell call operator targets only the Request callback. Runtime behavior, permissions, dependencies, endpoints, output fields, pagination controls, and the no-secret boundary are unchanged.
 
 Pagination is bounded per resource by `MaximumPageCount`, which defaults to 1000 and accepts values from 1 through 10000. When the limit is reached, a validated nextLink is rejected before invoking the excess request. Repeated, equivalent, malformed, cross-host, fragment-bearing, path-escaping, and case-variant pagination links are also rejected before callback invocation.
 
@@ -13,7 +13,7 @@ Pagination is bounded per resource by `MaximumPageCount`, which defaults to 1000
 - Delegated or application permission `Application.Read.All`.
 - A Microsoft Entra work or school tenant.
 
-Application.Read.All is the least-privileged permission documented for listing both applications and service principals. A reused context can contain additional scopes, but it must include `Application.Read.All`, and built-in requests remain limited to the documented GET endpoints.
+Application.Read.All is the least-privileged permission documented for listing both applications and service principals. Delegated access can also require a supported Microsoft Entra role. A reused context can contain additional scopes, but it must include `Application.Read.All`, and built-in requests remain limited to the documented GET endpoints.
 
 The combined collector does not support personal Microsoft accounts. Listing applications for a personal account has an additional `User.Read` requirement, while delegated personal-account access is not supported for listing service principals.
 
@@ -48,7 +48,7 @@ Module-generated findings contain identifiers, names, types, timestamps, days re
 
 `Export-EntraCredentialExpiryReport` writes a local report and serializes caller-supplied properties. It does not inspect or sanitize arbitrary input properties. Export only reviewed objects that contain no secrets.
 
-CSV preserves tenant-controlled text, including values beginning with spreadsheet formula markers. Spreadsheet software can interpret those values as formulas. Prefer JSON, or import every CSV column as text through an approved process.
+CSV preserves tenant-controlled text, including formula-leading tenant text. Spreadsheet software can interpret those values as formulas. Prefer JSON, or import every CSV column as text through an approved process.
 
 ## Verify
 
@@ -57,7 +57,7 @@ pwsh -NoLogo -NoProfile -File ./tests/Run-OfflineTests.ps1
 Invoke-Pester -Path ./tests/CredentialExpiry.Tests.ps1 -Output Detailed
 ```
 
-The Pester suite uses mocks to verify the approved connection scope, process scope for module-created connections, tenant forwarding, requested-tenant context rejection, GET method, approved endpoints, and CSV formula-text preservation without contacting Microsoft Graph. It also parses module source to inventory Microsoft Graph command references and reject mutation method literals. Static and mocked tests supplement policy validation; they do not establish live Microsoft Graph compatibility. The fuller suite uses Pester 6 and PSScriptAnalyzer. Installing those modules can require access to the configured repository.
+The Pester suite uses mocks to verify the approved connection scope, process scope for module-created connections, tenant forwarding, requested-tenant context rejection, GET method, approved endpoints, and CSV formula-text preservation without contacting Microsoft Graph. It also parses module source to inventory Microsoft Graph command references, prove the call operator targets only the Request callback, and reject mutation method literals. Static and mocked tests supplement policy validation; they do not establish live Microsoft Graph compatibility. The fuller suite uses Pester 6 and PSScriptAnalyzer. Installing those modules can require access to the configured repository.
 
 ## Provenance
 

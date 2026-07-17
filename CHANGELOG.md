@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.27 - 2026-07-17
+
+- Add an AST-scoped Pester assertion proving that the PowerShell call operator targets only the approved `Request` callback variable.
+- Align the manifest, README, security documentation, and version assertions with v0.1.27.
+- Keep runtime behavior, permissions, dependencies, endpoints, output fields, pagination controls, and the no-secret boundary unchanged.
+
 ## v0.1.26 - 2026-07-17
 
 - Replace the malformed ANSI-contaminated Graph method-binding regex with AST-scoped Pester assertions.

@@ -30,6 +30,19 @@ Describe 'Static Graph safety contract' {
         $graphCommands | Should -Be @('Connect-MgGraph', 'Get-MgContext', 'Invoke-MgGraphRequest')
     }
 
+    It 'limits call-operator invocation to the approved Request variable' {
+        $callOperatorCommands = @(
+            $sourceAst.FindAll({
+                param($node)
+                $node -is [System.Management.Automation.Language.CommandAst] -and
+                    $node.InvocationOperator -eq [System.Management.Automation.Language.TokenKind]::Ampersand
+            }, $true)
+        )
+        $callOperatorCommands.Count | Should -Be 1
+        $callOperatorCommands[0].CommandElements.Count | Should -BeGreaterOrEqual 1
+        $callOperatorCommands[0].CommandElements[0].Extent.Text | Should -Be '$Request'
+    }
+
     It 'keeps the approved scope, GET method, and resource paths' {
         $invokeCommands = @(
             $sourceAst.FindAll({
@@ -89,7 +102,7 @@ Describe 'Built-in Graph authentication boundary' {
             }
         }
 
-        It 'reuses an approved context without creating a process-scoped connection' {
+        It 'reuses an approved context without creating a connection' {
             Mock Import-Module {}
             Mock Get-MgContext {
                 [pscustomobject]@{
@@ -105,7 +118,7 @@ Describe 'Built-in Graph authentication boundary' {
             Should -Invoke Invoke-MgGraphRequest -Times 2 -Exactly -ParameterFilter { $Method -eq 'GET' }
         }
 
-        It 'rejects a reused context without the approved scope before connection or Graph requests' {
+        It 'rejects a reused context without the approved scope before Graph requests' {
             Mock Import-Module {}
             Mock Get-MgContext { [pscustomobject]@{ Scopes = @('Directory.Read.All') } }
             Mock Connect-MgGraph {}
@@ -198,7 +211,7 @@ Describe 'Get-EntraCredentialInventory' {
         $inventory.ResourceType | Should -Be @('application', 'servicePrincipal')
     }
 
-    It 'rejects a repeated pagination URI before invoking it again' {
+    It 'rejects repeated pagination before invoking it again' {
         $requests = [System.Collections.Generic.List[string]]::new()
         $pageTwo = 'https://graph.microsoft.com/v1.0/applications?page=2'
         $request = { param([string]$Uri, [string]$Method); $requests.Add($Uri); return @{ value = @(); '@odata.nextLink' = $pageTwo } }
@@ -206,7 +219,7 @@ Describe 'Get-EntraCredentialInventory' {
         $requests.Count | Should -Be 2
     }
 
-    It 'rejects equivalent relative and absolute pagination URIs before a duplicate request' {
+    It 'rejects equivalent relative and absolute pagination before a duplicate request' {
         $requests = [System.Collections.Generic.List[string]]::new()
         $absoluteInitial = 'https://graph.microsoft.com/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials'
         $request = { param([string]$Uri, [string]$Method); $requests.Add($Uri); return @{ value = @(); '@odata.nextLink' = $absoluteInitial } }
@@ -214,7 +227,7 @@ Describe 'Get-EntraCredentialInventory' {
         $requests.Count | Should -Be 1
     }
 
-    It 'rejects a unique-link sequence at the page limit before invoking the excess request' {
+    It 'rejects an excess page before invoking the request' {
         $requests = [System.Collections.Generic.List[string]]::new()
         $request = {
             param([string]$Uri, [string]$Method)
@@ -279,7 +292,7 @@ Describe 'Export-EntraCredentialExpiryReport' {
 }
 
 Describe 'Module metadata and documentation' {
-    It 'keeps v0.1.26 and the security boundary aligned' {
+    It 'keeps v0.1.27 and the security boundary aligned' {
         $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
         $readmePath = Join-Path $PSScriptRoot '..' 'README.md'
         $securityPath = Join-Path $PSScriptRoot '..' 'SECURITY.md'
@@ -287,18 +300,19 @@ Describe 'Module metadata and documentation' {
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
 
-        $moduleData.ModuleVersion | Should -Be '0.1.26'
+        $moduleData.ModuleVersion | Should -Be '0.1.27'
         $moduleData.Description | Should -BeLike '*Tenant-read-only*'
-        $readme | Should -BeLike '*Version 0.1.26*'
-        $readme | Should -BeLike '*AST-scoped static safety assertion*'
+        $readme | Should -BeLike '*Version 0.1.27*'
+        $readme | Should -BeLike '*call operator targets only the Request callback*'
         $readme | Should -BeLike '*Microsoft.Graph.Authentication 2.0 or later*'
         $readme | Should -BeLike '*does not support personal Microsoft accounts*'
         $readme | Should -BeLike '*National-cloud hosts are unsupported*'
         $readme | Should -BeLike '*MaximumPageCount*'
         $readme | Should -BeLike '*Application.Read.All*'
         $readme | Should -BeLike '*formula-leading tenant text*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.26 is tenant-read-only*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.27 is tenant-read-only*'
         $security | Should -BeLike '*approved Graph command references*'
+        $security | Should -BeLike '*call operator targets only the Request callback*'
         $security | Should -BeLike '*requested-tenant context rejection before Graph requests*'
         $security | Should -BeLike '*GET-only behavior*'
         $security | Should -BeLike '*do not neutralize spreadsheet formulas*'
