@@ -40,6 +40,24 @@ Describe 'Built-in Graph authentication boundary' {
             }
         }
 
+        It 'reuses an approved context without creating a process-scoped connection' {
+            Mock Import-Module {}
+            Mock Get-MgContext {
+                [pscustomobject]@{
+                    Scopes = @('Application.Read.All')
+                    TenantId = '11111111-2222-3333-4444-555555555555'
+                }
+            }
+            Mock Connect-MgGraph {}
+            Mock Invoke-MgGraphRequest { return @{ value = @() } }
+
+            @(Get-EntraCredentialInventory).Count | Should -Be 0
+            Should -Invoke Connect-MgGraph -Times 0 -Exactly
+            Should -Invoke Invoke-MgGraphRequest -Times 2 -Exactly -ParameterFilter {
+                $Method -eq 'GET'
+            }
+        }
+
         It 'rejects a reused context without the approved scope before connection or Graph requests' {
             Mock Import-Module {}
             Mock Get-MgContext { [pscustomobject]@{ Scopes = @('Directory.Read.All'); TenantId = '11111111-2222-3333-4444-555555555555' } }
@@ -244,7 +262,7 @@ Describe 'Export-EntraCredentialExpiryReport' {
 }
 
 Describe 'Module metadata and documentation' {
-    It 'keeps v0.1.23 and the security boundary aligned' {
+    It 'keeps v0.1.24 and the security boundary aligned' {
         $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
         $readmePath = Join-Path $PSScriptRoot '..' 'README.md'
         $securityPath = Join-Path $PSScriptRoot '..' 'SECURITY.md'
@@ -252,19 +270,22 @@ Describe 'Module metadata and documentation' {
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
 
-        $moduleData.ModuleVersion | Should -Be '0.1.23'
+        $moduleData.ModuleVersion | Should -Be '0.1.24'
         $moduleData.Description | Should -BeLike '*Tenant-read-only*'
-        $readme | Should -BeLike '*Version 0.1.23*'
+        $readme | Should -BeLike '*Version 0.1.24*'
         $readme | Should -BeLike '*Microsoft.Graph.Authentication 2.0 or later*'
         $readme | Should -BeLike '*does not support personal Microsoft accounts*'
         $readme | Should -BeLike '*National-cloud hosts are unsupported*'
         $readme | Should -BeLike '*MaximumPageCount*'
         $readme | Should -BeLike '*before invoking the excess request*'
         $readme | Should -BeLike '*Application.Read.All*'
+        $readme | Should -BeLike '*process scope for module-created connections*'
+        $readme | Should -BeLike '*requested-tenant context rejection*'
         $readme | Should -BeLike '*formula-leading tenant text*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.23 is tenant-read-only*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.24 is tenant-read-only*'
         $security | Should -BeLike '*missing scopes before and after connection*'
-        $security | Should -BeLike '*invalid tenant contexts before Graph requests*'
+        $security | Should -BeLike '*requested-tenant context rejection before Graph requests*'
+        $security | Should -BeLike '*reused context is not required to have been created with process scope*'
         $security | Should -BeLike '*maximum page count*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
         $security | Should -BeLike '*do not neutralize spreadsheet formulas*'

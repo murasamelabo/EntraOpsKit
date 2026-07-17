@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.24 - 2026-07-17
+
+- Clarify that process-scoped context is requested only when the module creates a Graph connection.
+- Clarify that active-tenant validation occurs when `TenantId` is supplied and that reused-context lifetime remains operator-controlled.
+- Align the manifest, README, security documentation, and version assertions with v0.1.24.
+- Keep runtime behavior, permissions, dependencies, GET-only endpoints, output fields, pagination controls, and the no-secret boundary unchanged.
+
 ## v0.1.23 - 2026-07-17
 
 - Add offline Pester coverage proving that CSV export preserves formula-leading tenant text rather than neutralizing it.
