@@ -30,7 +30,7 @@ Describe 'Static Graph safety contract' {
         $graphCommands | Should -Be @('Connect-MgGraph', 'Get-MgContext', 'Invoke-MgGraphRequest')
     }
 
-    It 'limits call-operator invocation to the approved Request variable' {
+    It 'limits call-operator invocation to the approved Request GET contract' {
         $callOperatorCommands = @(
             $sourceAst.FindAll({
                 param($node)
@@ -39,8 +39,8 @@ Describe 'Static Graph safety contract' {
             }, $true)
         )
         $callOperatorCommands.Count | Should -Be 1
-        $callOperatorCommands[0].CommandElements.Count | Should -BeGreaterOrEqual 1
-        $callOperatorCommands[0].CommandElements[0].Extent.Text | Should -Be '$Request'
+        @($callOperatorCommands[0].CommandElements | ForEach-Object { $_.Extent.Text }) |
+            Should -Be @('$Request', '-Uri', '$uri', '-Method', "'GET'")
     }
 
     It 'keeps the approved scope, GET method, and resource paths' {
@@ -292,7 +292,7 @@ Describe 'Export-EntraCredentialExpiryReport' {
 }
 
 Describe 'Module metadata and documentation' {
-    It 'keeps v0.1.27 and the security boundary aligned' {
+    It 'keeps v0.1.28 and the security boundary aligned' {
         $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
         $readmePath = Join-Path $PSScriptRoot '..' 'README.md'
         $securityPath = Join-Path $PSScriptRoot '..' 'SECURITY.md'
@@ -300,19 +300,19 @@ Describe 'Module metadata and documentation' {
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
 
-        $moduleData.ModuleVersion | Should -Be '0.1.27'
+        $moduleData.ModuleVersion | Should -Be '0.1.28'
         $moduleData.Description | Should -BeLike '*Tenant-read-only*'
-        $readme | Should -BeLike '*Version 0.1.27*'
-        $readme | Should -BeLike '*call operator targets only the Request callback*'
+        $readme | Should -BeLike '*Version 0.1.28*'
+        $readme | Should -BeLike '*validated URI variable and literal GET method*'
         $readme | Should -BeLike '*Microsoft.Graph.Authentication 2.0 or later*'
         $readme | Should -BeLike '*does not support personal Microsoft accounts*'
         $readme | Should -BeLike '*National-cloud hosts are unsupported*'
         $readme | Should -BeLike '*MaximumPageCount*'
         $readme | Should -BeLike '*Application.Read.All*'
         $readme | Should -BeLike '*formula-leading tenant text*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.27 is tenant-read-only*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.28 is tenant-read-only*'
         $security | Should -BeLike '*approved Graph command references*'
-        $security | Should -BeLike '*call operator targets only the Request callback*'
+        $security | Should -BeLike '*validated URI variable and literal GET method*'
         $security | Should -BeLike '*requested-tenant context rejection before Graph requests*'
         $security | Should -BeLike '*GET-only behavior*'
         $security | Should -BeLike '*do not neutralize spreadsheet formulas*'

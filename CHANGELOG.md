@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.28 - 2026-07-17
+
+- Strengthen the AST-scoped assertion so the approved `Request` callback invocation must receive the validated URI variable and literal `GET` method.
+- Align the manifest, README, security documentation, and version assertions with v0.1.28.
+- Keep runtime behavior, permissions, dependencies, endpoints, output fields, pagination controls, and the no-secret boundary unchanged.
+
 ## v0.1.27 - 2026-07-17
 
 - Add an AST-scoped Pester assertion proving that the PowerShell call operator targets only the approved `Request` callback variable.
