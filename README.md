@@ -2,18 +2,20 @@
 
 EntraOpsKit is a collection of narrowly scoped, tenant-read-only Microsoft Entra operations tools. Built-in live collection does not mutate Microsoft Entra, but report export writes local files and an operator-supplied callback can have unrelated side effects. Version-pinned CI dependencies, offline project tests, Pester, and PSScriptAnalyzer provide release checks before publication.
 
-Version 0.1.21 provides a credential expiry auditor for application registrations and service principals and adds offline regression coverage proving that invalid active Graph contexts fail before any Graph request. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials.
+Version 0.1.22 provides a credential expiry auditor for application registrations and service principals and expands offline regression coverage proving that invalid active Graph contexts fail before any Graph request. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials.
 
 Pagination is bounded per resource by `MaximumPageCount`, which defaults to 1000 and accepts values from 1 through 10000. When the limit is reached, a validated nextLink is rejected before invoking the excess request. Repeated, equivalent, malformed, cross-host, fragment-bearing, path-escaping, and case-variant pagination links are also rejected before callback invocation.
 
 ## Requirements
 
 - PowerShell 7.2 or later.
-- Microsoft.Graph.Authentication 2.x for live collection.
+- Microsoft.Graph.Authentication 2.0 or later for live collection.
 - Delegated or application permission `Application.Read.All`.
 - A Microsoft Entra work or school tenant.
 
 Application.Read.All is the least-privileged permission documented for listing both applications and service principals. A reused context can contain additional scopes, but it must include `Application.Read.All`, and built-in requests remain limited to the documented GET endpoints.
+
+The combined collector does not support personal Microsoft accounts. Listing applications for a personal account has an additional `User.Read` requirement, while delegated personal-account access is not supported for listing service principals.
 
 ## Use
 
@@ -30,7 +32,9 @@ The built-in collector follows pagination only for these GET endpoints:
 - `/v1.0/applications`
 - `/v1.0/servicePrincipals`
 
-Absolute pagination links must use HTTPS, `graph.microsoft.com`, the default port, no user information or fragment, and the exact case-sensitive resource path. Relative and absolute pagination links containing fragments are rejected. Relative paths must remain on the same exact resource path. Equivalent relative and absolute links are treated as repeated. National-cloud hosts are not currently supported. Documented agent-identity placeholder objects are ignored.
+Absolute pagination links must use HTTPS, `graph.microsoft.com`, the default port, no user information or fragment, and the exact case-sensitive resource path. Relative and absolute pagination links containing fragments are rejected. Relative paths must remain on the same exact resource path. Equivalent relative and absolute links are treated as repeated.
+
+Microsoft documents both list APIs as available in national clouds, but this toolkit currently validates only the Global Microsoft Graph host. National-cloud hosts are unsupported.
 
 If `TenantId` is supplied, built-in live collection compares it with the active context before issuing an inventory request. The optional `Request` scriptblock is an operator-supplied test seam that bypasses module-managed authentication and context validation. URI and GET method arguments are validated before callback invocation, but unrelated callback behavior cannot be constrained. Use only trusted callback code.
 

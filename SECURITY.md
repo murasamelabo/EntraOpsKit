@@ -6,7 +6,9 @@ The latest release is supported. Source and release artifacts are publicly inspe
 
 ## Security Boundary
 
-EntraOpsKit 0.1.21 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals and requires `Application.Read.All`. Offline regression coverage verifies the built-in connection scope, process-scoped context, tenant forwarding, rejection of missing scopes and invalid tenant contexts before Graph requests, GET method, and approved endpoints without contacting Microsoft Graph.
+EntraOpsKit 0.1.22 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals and requires `Application.Read.All`. Offline regression coverage verifies the built-in connection scope, process-scoped context, tenant forwarding, rejection of missing scopes before and after connection, rejection of invalid tenant contexts before Graph requests, GET method, and approved endpoints without contacting Microsoft Graph.
+
+The combined collector supports Microsoft Entra work or school tenants, not personal Microsoft accounts. Microsoft documents the underlying list APIs as available in national clouds, but the toolkit currently accepts only the Global Graph host `graph.microsoft.com`; national-cloud hosts are unsupported.
 
 The collector accepts at most `MaximumPageCount` pages per resource, defaulting to 1000. A nextLink beyond the maximum page count is rejected before callback invocation. It also rejects pagination outside the expected Global Microsoft Graph host and exact case-sensitive resource path, non-HTTPS links, non-default ports, user information, fragments, case-variant resource paths, and repeated links after canonicalizing equivalent relative and absolute Global Graph forms. It ignores documented agent-identity placeholder objects.
 
@@ -14,7 +16,7 @@ Tenant-read-only does not mean filesystem-read-only. `Export-EntraCredentialExpi
 
 Built-in inventory and finding generation copy credential metadata but not password secret text, certificate key material, or credential values. The exporter serializes caller-supplied properties and does not sanitize arbitrary objects. Export only reviewed objects containing no secrets.
 
-When the module establishes a connection, it requests `Application.Read.All` with process-scoped context. Existing contexts can contain broader scopes, but they must include `Application.Read.All`, and built-in collection remains restricted to the documented GET endpoints. When a requested TenantId is supplied, the active context must identify the same tenant.
+When the module establishes a connection, it imports Microsoft.Graph.Authentication 2.0 or later and requests `Application.Read.All` with process-scoped context. Existing contexts can contain broader scopes, but they must include `Application.Read.All`, and built-in collection remains restricted to the documented GET endpoints. When a requested TenantId is supplied, the active context must identify the same tenant.
 
 The optional `Request` callback is operator-supplied code for tests or controlled integration. It bypasses module-managed authentication and context validation. The module validates URI and GET arguments but cannot prevent unrelated callback side effects. Use only trusted callbacks.
 
@@ -31,4 +33,5 @@ Use GitHub private vulnerability reporting. Do not include tenant identifiers, t
 - Tenant configuration changes.
 - Token collection or persistence.
 - Arbitrary Graph endpoints or HTTP hosts.
+- Personal Microsoft account support.
 - National-cloud compatibility in the current Global Graph implementation.

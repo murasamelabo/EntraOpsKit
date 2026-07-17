@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.22 - 2026-07-17
+
+- Add offline Pester coverage proving that a newly connected Graph context without `Application.Read.All` fails before Graph requests.
+- Clarify that the combined collector does not support personal Microsoft accounts and that national-cloud exclusion is a toolkit limitation.
+- Align the manifest, README, security documentation, and version assertions with v0.1.22, and document Microsoft.Graph.Authentication 2.0 or later to match runtime behavior.
+- Keep runtime behavior, permissions, dependencies, GET-only endpoints, output fields, pagination controls, and the no-secret boundary unchanged.
+
 ## v0.1.21 - 2026-07-17
 
 - Add offline Pester coverage proving that null post-connect, malformed-tenant, and mismatched-tenant Graph contexts fail before Graph requests.

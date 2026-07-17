@@ -22,37 +22,28 @@ Describe 'Built-in Graph authentication boundary' {
             Mock Get-MgContext {
                 $script:contextCallCount++
                 if ($script:contextCallCount -eq 1) { return $null }
-                return [pscustomobject]@{
-                    Scopes = @('Application.Read.All')
-                    TenantId = $tenantId
-                }
+                return [pscustomobject]@{ Scopes = @('Application.Read.All'); TenantId = $tenantId }
             }
             Mock Connect-MgGraph {}
             Mock Invoke-MgGraphRequest { return @{ value = @() } }
 
             @(Get-EntraCredentialInventory -TenantId $tenantId).Count | Should -Be 0
-
             Should -Invoke Connect-MgGraph -Times 1 -Exactly -ParameterFilter {
-                $Scopes.Count -eq 1 -and
-                $Scopes[0] -eq 'Application.Read.All' -and
-                $NoWelcome -and
-                $ContextScope -eq 'Process' -and
-                $TenantId -eq $tenantId
+                $Scopes.Count -eq 1 -and $Scopes[0] -eq 'Application.Read.All' -and
+                $NoWelcome -and $ContextScope -eq 'Process' -and $TenantId -eq $tenantId
             }
             Should -Invoke Invoke-MgGraphRequest -Times 2 -Exactly -ParameterFilter {
-                $Method -eq 'GET' -and
-                $OutputType -eq 'PSObject' -and
-                $Uri -in @(
+                $Method -eq 'GET' -and $OutputType -eq 'PSObject' -and $Uri -in @(
                     '/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials',
                     '/v1.0/servicePrincipals?$select=id,appId,displayName,passwordCredentials,keyCredentials'
                 )
             }
         }
 
-        It 'rejects a reused context without the approved scope before any Graph request' {
+        It 'rejects a reused context without the approved scope before connection or Graph requests' {
             Mock Import-Module {}
             Mock Get-MgContext {
-                return [pscustomobject]@{
+                [pscustomobject]@{
                     Scopes = @('Directory.Read.All')
                     TenantId = '11111111-2222-3333-4444-555555555555'
                 }
@@ -62,6 +53,25 @@ Describe 'Built-in Graph authentication boundary' {
 
             { Get-EntraCredentialInventory } | Should -Throw "*must include 'Application.Read.All'*"
             Should -Invoke Connect-MgGraph -Times 0 -Exactly
+            Should -Invoke Invoke-MgGraphRequest -Times 0 -Exactly
+        }
+
+        It 'rejects a newly connected context without the approved scope before Graph requests' {
+            $script:contextCallCount = 0
+            Mock Import-Module {}
+            Mock Get-MgContext {
+                $script:contextCallCount++
+                if ($script:contextCallCount -eq 1) { return $null }
+                return [pscustomobject]@{
+                    Scopes = @('Directory.Read.All')
+                    TenantId = '11111111-2222-3333-4444-555555555555'
+                }
+            }
+            Mock Connect-MgGraph {}
+            Mock Invoke-MgGraphRequest { return @{ value = @() } }
+
+            { Get-EntraCredentialInventory } | Should -Throw "*must include 'Application.Read.All'*"
+            Should -Invoke Connect-MgGraph -Times 1 -Exactly
             Should -Invoke Invoke-MgGraphRequest -Times 0 -Exactly
         }
 
@@ -92,10 +102,7 @@ Describe 'Built-in Graph authentication boundary' {
             $tenantId = '11111111-2222-3333-4444-555555555555'
             Mock Import-Module {}
             Mock Get-MgContext {
-                return [pscustomobject]@{
-                    Scopes = @('Application.Read.All')
-                    TenantId = $ContextTenantId
-                }
+                [pscustomobject]@{ Scopes = @('Application.Read.All'); TenantId = $ContextTenantId }
             }
             Mock Connect-MgGraph {}
             Mock Invoke-MgGraphRequest { return @{ value = @() } }
@@ -241,13 +248,23 @@ Describe 'Get-EntraCredentialInventory' {
 Describe 'Active Graph context validation' {
     InModuleScope EntraOpsKit {
         It 'accepts a matching requested tenant' {
-            $context = [pscustomobject]@{ Scopes = @('Application.Read.All'); TenantId = '11111111-2222-3333-4444-555555555555' }
-            { Assert-EntraReadContext -Context $context -TenantId '11111111-2222-3333-4444-555555555555' } | Should -Not -Throw
+            $context = [pscustomobject]@{
+                Scopes = @('Application.Read.All')
+                TenantId = '11111111-2222-3333-4444-555555555555'
+            }
+            {
+                Assert-EntraReadContext -Context $context -TenantId '11111111-2222-3333-4444-555555555555'
+            } | Should -Not -Throw
         }
 
         It 'rejects a mismatched requested tenant' {
-            $context = [pscustomobject]@{ Scopes = @('Application.Read.All'); TenantId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
-            { Assert-EntraReadContext -Context $context -TenantId '11111111-2222-3333-4444-555555555555' } | Should -Throw '*does not match*'
+            $context = [pscustomobject]@{
+                Scopes = @('Application.Read.All')
+                TenantId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
+            }
+            {
+                Assert-EntraReadContext -Context $context -TenantId '11111111-2222-3333-4444-555555555555'
+            } | Should -Throw '*does not match*'
         }
     }
 }
@@ -257,7 +274,10 @@ Describe 'Export-EntraCredentialExpiryReport' {
         $fixturePath = Join-Path $PSScriptRoot 'fixtures' 'credentials.json'
         $outputPath = Join-Path $TestDrive 'report.json'
         $inventory = Get-Content -LiteralPath $fixturePath -Raw | ConvertFrom-Json -Depth 20
-        $findings = @($inventory | Get-EntraCredentialExpiryFinding -Now ([DateTimeOffset]::Parse('2026-07-14T00:00:00Z')))
+        $findings = @(
+            $inventory |
+                Get-EntraCredentialExpiryFinding -Now ([DateTimeOffset]::Parse('2026-07-14T00:00:00Z'))
+        )
         Export-EntraCredentialExpiryReport -Finding $findings -Path $outputPath -Format Json
         $raw = Get-Content -LiteralPath $outputPath -Raw
         $raw | Should -Not -Match 'fixture-secret-value'
@@ -272,20 +292,25 @@ Describe 'Export-EntraCredentialExpiryReport' {
 }
 
 Describe 'Module metadata and documentation' {
-    It 'keeps v0.1.21 and the security boundary aligned' {
+    It 'keeps v0.1.22 and the security boundary aligned' {
         $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
         $readmePath = Join-Path $PSScriptRoot '..' 'README.md'
         $securityPath = Join-Path $PSScriptRoot '..' 'SECURITY.md'
         $moduleData = Import-PowerShellDataFile $modulePath
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
-        $moduleData.ModuleVersion | Should -Be '0.1.21'
+
+        $moduleData.ModuleVersion | Should -Be '0.1.22'
         $moduleData.Description | Should -BeLike '*Tenant-read-only*'
-        $readme | Should -BeLike '*Version 0.1.21*'
+        $readme | Should -BeLike '*Version 0.1.22*'
+        $readme | Should -BeLike '*Microsoft.Graph.Authentication 2.0 or later*'
+        $readme | Should -BeLike '*does not support personal Microsoft accounts*'
+        $readme | Should -BeLike '*National-cloud hosts are unsupported*'
         $readme | Should -BeLike '*MaximumPageCount*'
         $readme | Should -BeLike '*before invoking the excess request*'
         $readme | Should -BeLike '*Application.Read.All*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.21 is tenant-read-only*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.22 is tenant-read-only*'
+        $security | Should -BeLike '*missing scopes before and after connection*'
         $security | Should -BeLike '*invalid tenant contexts before Graph requests*'
         $security | Should -BeLike '*maximum page count*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
