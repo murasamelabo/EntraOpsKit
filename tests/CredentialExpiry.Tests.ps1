@@ -31,8 +31,19 @@ Describe 'Static Graph safety contract' {
     }
 
     It 'keeps the approved scope, GET method, and resource paths' {
-        $sourceText | Should -Match "Application\.Read\.All"
-        $sourceText | Should -Match "-Method [39m\$Method"
+        $invokeCommands = @(
+            $sourceAst.FindAll({
+                param($node)
+                $node -is [System.Management.Automation.Language.CommandAst] -and
+                    $node.GetCommandName() -eq 'Invoke-MgGraphRequest'
+            }, $true)
+        )
+        $invokeCommands.Count | Should -Be 1
+        $invokeElements = @($invokeCommands[0].CommandElements | ForEach-Object { $_.Extent.Text })
+        $invokeElements | Should -Contain '-Method'
+        $invokeElements | Should -Contain '$Method'
+
+        $sourceText | Should -Match 'Application\.Read\.All'
         $sourceText | Should -Match "Method 'GET'"
         $sourceText | Should -Not -Match "(?i)Method\s+['\"](?:POST|PATCH|PUT|DELETE)['\"]"
         @([regex]::Matches($sourceText, '/v1\.0/(?:applications|servicePrincipals)') |
@@ -268,7 +279,7 @@ Describe 'Export-EntraCredentialExpiryReport' {
 }
 
 Describe 'Module metadata and documentation' {
-    It 'keeps v0.1.25 and the security boundary aligned' {
+    It 'keeps v0.1.26 and the security boundary aligned' {
         $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
         $readmePath = Join-Path $PSScriptRoot '..' 'README.md'
         $securityPath = Join-Path $PSScriptRoot '..' 'SECURITY.md'
@@ -276,17 +287,17 @@ Describe 'Module metadata and documentation' {
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
 
-        $moduleData.ModuleVersion | Should -Be '0.1.25'
+        $moduleData.ModuleVersion | Should -Be '0.1.26'
         $moduleData.Description | Should -BeLike '*Tenant-read-only*'
-        $readme | Should -BeLike '*Version 0.1.25*'
-        $readme | Should -BeLike '*offline source safety contract*'
+        $readme | Should -BeLike '*Version 0.1.26*'
+        $readme | Should -BeLike '*AST-scoped static safety assertion*'
         $readme | Should -BeLike '*Microsoft.Graph.Authentication 2.0 or later*'
         $readme | Should -BeLike '*does not support personal Microsoft accounts*'
         $readme | Should -BeLike '*National-cloud hosts are unsupported*'
         $readme | Should -BeLike '*MaximumPageCount*'
         $readme | Should -BeLike '*Application.Read.All*'
         $readme | Should -BeLike '*formula-leading tenant text*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.25 is tenant-read-only*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.26 is tenant-read-only*'
         $security | Should -BeLike '*approved Graph command references*'
         $security | Should -BeLike '*requested-tenant context rejection before Graph requests*'
         $security | Should -BeLike '*GET-only behavior*'

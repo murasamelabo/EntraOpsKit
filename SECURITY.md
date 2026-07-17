@@ -6,7 +6,7 @@ The latest release is supported. Source and release artifacts are publicly inspe
 
 ## Security Boundary
 
-EntraOpsKit 0.1.25 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals and requires `Application.Read.All`. Offline regression coverage verifies the approved Graph command references, connection scope, process scope for module-created connections, tenant forwarding, rejection of missing scopes before and after connection, requested-tenant context rejection before Graph requests, GET-only behavior, approved endpoints, and preservation of formula-leading text in CSV output without contacting Microsoft Graph.
+EntraOpsKit 0.1.26 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals and requires `Application.Read.All`. Offline regression coverage verifies the approved Graph command references, connection scope, process scope for module-created connections, tenant forwarding, rejection of missing scopes before and after connection, requested-tenant context rejection before Graph requests, GET-only behavior, approved endpoints, and preservation of formula-leading text in CSV output without contacting Microsoft Graph.
 
 The combined collector supports Microsoft Entra work or school tenants, not personal Microsoft accounts. Microsoft documents the underlying list APIs as available in national clouds, but the toolkit currently accepts only the Global Graph host `graph.microsoft.com`; national-cloud hosts are unsupported.
 

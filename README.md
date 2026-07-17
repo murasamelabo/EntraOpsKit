@@ -2,7 +2,7 @@
 
 EntraOpsKit is a collection of narrowly scoped, tenant-read-only Microsoft Entra operations tools. Built-in live collection does not mutate Microsoft Entra, but report export writes local files and an operator-supplied callback can have unrelated side effects. Version-pinned CI dependencies, offline project tests, Pester, and PSScriptAnalyzer provide release checks before publication.
 
-Version 0.1.25 adds an offline source safety contract for the approved Graph commands, `Application.Read.All`, GET-only behavior, and the two approved endpoint paths. Runtime behavior, permissions, dependencies, endpoints, output fields, pagination controls, and the no-secret boundary are unchanged.
+Version 0.1.26 repairs the malformed Graph method-binding test with an AST-scoped static safety assertion. Runtime behavior, permissions, dependencies, endpoints, output fields, pagination controls, and the no-secret boundary are unchanged.
 
 Pagination is bounded per resource by `MaximumPageCount`, which defaults to 1000 and accepts values from 1 through 10000. When the limit is reached, a validated nextLink is rejected before invoking the excess request. Repeated, equivalent, malformed, cross-host, fragment-bearing, path-escaping, and case-variant pagination links are also rejected before callback invocation.
 
