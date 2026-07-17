@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.25 - 2026-07-17
+
+- Add offline Pester assertions that inventory Microsoft Graph command references and enforce the approved command set.
+- Add source assertions for `Application.Read.All`, GET-only behavior, and the two approved resource paths.
+- Align the manifest, README, security documentation, and version assertions with v0.1.25.
+- Keep runtime behavior, permissions, dependencies, endpoints, output fields, pagination controls, and the no-secret boundary unchanged.
+
 ## v0.1.24 - 2026-07-17
 
 - Clarify that process-scoped context is requested only when the module creates a Graph connection.

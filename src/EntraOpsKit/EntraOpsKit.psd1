@@ -1,6 +1,6 @@
 @{
     RootModule = 'EntraOpsKit.psm1'
-    ModuleVersion = '0.1.24'
+    ModuleVersion = '0.1.25'
     GUID = 'f68f8044-c285-40e0-9bfc-b33e07ec60cd'
     Author = 'Murasame Labo'
     CompanyName = 'Murasame Labo'

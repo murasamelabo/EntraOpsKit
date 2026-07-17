@@ -6,7 +6,7 @@ The latest release is supported. Source and release artifacts are publicly inspe
 
 ## Security Boundary
 
-EntraOpsKit 0.1.24 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals and requires `Application.Read.All`. Offline regression coverage verifies the approved connection scope, process scope for module-created connections, tenant forwarding, rejection of missing scopes before and after connection, requested-tenant context rejection before Graph requests, GET method, approved endpoints, and preservation of formula-leading text in CSV output without contacting Microsoft Graph.
+EntraOpsKit 0.1.25 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals and requires `Application.Read.All`. Offline regression coverage verifies the approved Graph command references, connection scope, process scope for module-created connections, tenant forwarding, rejection of missing scopes before and after connection, requested-tenant context rejection before Graph requests, GET-only behavior, approved endpoints, and preservation of formula-leading text in CSV output without contacting Microsoft Graph.
 
 The combined collector supports Microsoft Entra work or school tenants, not personal Microsoft accounts. Microsoft documents the underlying list APIs as available in national clouds, but the toolkit currently accepts only the Global Graph host `graph.microsoft.com`; national-cloud hosts are unsupported.
 
@@ -22,7 +22,7 @@ The optional `Request` callback is operator-supplied code for tests or controlle
 
 Reports contain tenant identifiers and operational metadata. Store and remove them according to approved policy. CSV reports preserve tenant-controlled text, including formula-leading values, and do not neutralize spreadsheet formulas; prefer JSON or import CSV columns as text.
 
-Mocked tests verify invocation behavior and do not establish live Microsoft Graph compatibility or publication gating. Repository-visible CI installs pinned packages from a configured network repository.
+Static source assertions and mocked tests verify declared source and invocation behavior. They do not establish live Microsoft Graph compatibility or publication gating. Repository-visible CI installs pinned packages from a configured network repository.
 
 ## Reporting a Vulnerability
 
