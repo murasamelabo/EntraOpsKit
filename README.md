@@ -2,7 +2,7 @@
 
 EntraOpsKit is a collection of narrowly scoped, tenant-read-only Microsoft Entra operations tools. Built-in live collection does not mutate Microsoft Entra, but report export writes local files and an operator-supplied callback can have unrelated side effects. Version-pinned CI dependencies, offline project tests, Pester, and PSScriptAnalyzer provide release checks before publication.
 
-Version 0.1.22 provides a credential expiry auditor for application registrations and service principals and expands offline regression coverage proving that invalid active Graph contexts fail before any Graph request. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials.
+Version 0.1.23 provides a credential expiry auditor for application registrations and service principals and adds offline regression coverage proving that CSV export preserves formula-leading tenant text rather than neutralizing it. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials.
 
 Pagination is bounded per resource by `MaximumPageCount`, which defaults to 1000 and accepts values from 1 through 10000. When the limit is reached, a validated nextLink is rejected before invoking the excess request. Repeated, equivalent, malformed, cross-host, fragment-bearing, path-escaping, and case-variant pagination links are also rejected before callback invocation.
 
@@ -46,7 +46,7 @@ Module-generated findings contain identifiers, names, types, timestamps, days re
 
 `Export-EntraCredentialExpiryReport` writes a local report and serializes caller-supplied properties. It does not inspect or sanitize arbitrary input properties. Export only reviewed objects that contain no secrets.
 
-CSV preserves tenant-controlled text. Spreadsheet software can interpret values beginning with formula markers as spreadsheet formulas. Prefer JSON, or import every CSV column as text through an approved process.
+CSV preserves tenant-controlled text, including values beginning with spreadsheet formula markers. Spreadsheet software can interpret those values as formulas. Prefer JSON, or import every CSV column as text through an approved process.
 
 ## Verify
 
@@ -55,7 +55,7 @@ pwsh -NoLogo -NoProfile -File ./tests/Run-OfflineTests.ps1
 Invoke-Pester -Path ./tests/CredentialExpiry.Tests.ps1 -Output Detailed
 ```
 
-The Pester suite uses mocks to verify the built-in connection scope, process-scoped context, tenant forwarding, invalid-context rejection, GET method, and approved endpoints without contacting Microsoft Graph. The fuller suite uses Pester 6 and PSScriptAnalyzer. Installing those modules can require access to the configured repository.
+The Pester suite uses mocks to verify the built-in connection scope, process-scoped context, tenant forwarding, invalid-context rejection, GET method, approved endpoints, and CSV formula-text preservation without contacting Microsoft Graph. The fuller suite uses Pester 6 and PSScriptAnalyzer. Installing those modules can require access to the configured repository.
 
 ## Provenance
 

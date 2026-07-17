@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.23 - 2026-07-17
+
+- Add offline Pester coverage proving that CSV export preserves formula-leading tenant text rather than neutralizing it.
+- Align the manifest, README, security documentation, and version assertions with v0.1.23.
+- Keep runtime behavior, permissions, dependencies, GET-only endpoints, output fields, pagination controls, and the no-secret boundary unchanged.
+
 ## v0.1.22 - 2026-07-17
 
 - Add offline Pester coverage proving that a newly connected Graph context without `Application.Read.All` fails before Graph requests.
@@ -35,17 +41,17 @@
 
 - Require exact ordinal resource-path matching for absolute and relative Microsoft Graph pagination links.
 - Reject case-variant resource paths before invoking the request callback and add offline Pester coverage for exact request counts.
-- Keep GET-only endpoints, Application.Read.All, dependencies, output fields, and the no-secret boundary unchanged.
+- Keep GET-only endpoints, Application.Read.All, dependencies, output fields, pagination controls, and the no-secret boundary unchanged.
 
 ## v0.1.16 - 2026-07-16
 
 - Remove existing-context tenant validation from the roadmap because it shipped in v0.1.7.
 - Align release metadata and version regression assertions.
-- Keep runtime behavior, GET-only endpoints, Application.Read.All, dependencies, output fields, and the no-secret boundary unchanged.
+- Keep runtime behavior, GET-only endpoints, Application.Read.All, dependencies, output fields unchanged.
 
 ## v0.1.15 - 2026-07-16
 
-- Clarify that the built-in Microsoft Graph behavior is tenant-read-only rather than filesystem-read-only.
+- Clarify that built-in Microsoft Graph behavior is tenant-read-only rather than filesystem-read-only.
 - State explicitly that report export writes local files and operator-supplied callbacks can have unrelated side effects.
 - Keep runtime behavior, GET-only endpoints, Application.Read.All, dependencies, and output fields unchanged.
 
