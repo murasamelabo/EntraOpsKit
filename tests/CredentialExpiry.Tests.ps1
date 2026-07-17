@@ -64,6 +64,46 @@ Describe 'Built-in Graph authentication boundary' {
             Should -Invoke Connect-MgGraph -Times 0 -Exactly
             Should -Invoke Invoke-MgGraphRequest -Times 0 -Exactly
         }
+
+        It 'rejects a null context after connection before any Graph request' {
+            Mock Import-Module {}
+            Mock Get-MgContext { return $null }
+            Mock Connect-MgGraph {}
+            Mock Invoke-MgGraphRequest { return @{ value = @() } }
+
+            { Get-EntraCredentialInventory } | Should -Throw '*did not produce a context*'
+            Should -Invoke Connect-MgGraph -Times 1 -Exactly
+            Should -Invoke Invoke-MgGraphRequest -Times 0 -Exactly
+        }
+
+        It 'rejects <Name> before any Graph request' -TestCases @(
+            @{
+                Name = 'a malformed active tenant'
+                ContextTenantId = 'not-a-guid'
+                ExpectedMessage = '*does not identify a valid tenant*'
+            },
+            @{
+                Name = 'a mismatched active tenant'
+                ContextTenantId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
+                ExpectedMessage = '*does not match requested TenantId*'
+            }
+        ) {
+            param($Name, $ContextTenantId, $ExpectedMessage)
+            $tenantId = '11111111-2222-3333-4444-555555555555'
+            Mock Import-Module {}
+            Mock Get-MgContext {
+                return [pscustomobject]@{
+                    Scopes = @('Application.Read.All')
+                    TenantId = $ContextTenantId
+                }
+            }
+            Mock Connect-MgGraph {}
+            Mock Invoke-MgGraphRequest { return @{ value = @() } }
+
+            { Get-EntraCredentialInventory -TenantId $tenantId } | Should -Throw $ExpectedMessage
+            Should -Invoke Connect-MgGraph -Times 0 -Exactly
+            Should -Invoke Invoke-MgGraphRequest -Times 0 -Exactly
+        }
     }
 }
 
@@ -232,20 +272,21 @@ Describe 'Export-EntraCredentialExpiryReport' {
 }
 
 Describe 'Module metadata and documentation' {
-    It 'keeps v0.1.20 and the security boundary aligned' {
+    It 'keeps v0.1.21 and the security boundary aligned' {
         $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
         $readmePath = Join-Path $PSScriptRoot '..' 'README.md'
         $securityPath = Join-Path $PSScriptRoot '..' 'SECURITY.md'
         $moduleData = Import-PowerShellDataFile $modulePath
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
-        $moduleData.ModuleVersion | Should -Be '0.1.20'
+        $moduleData.ModuleVersion | Should -Be '0.1.21'
         $moduleData.Description | Should -BeLike '*Tenant-read-only*'
-        $readme | Should -BeLike '*Version 0.1.20*'
+        $readme | Should -BeLike '*Version 0.1.21*'
         $readme | Should -BeLike '*MaximumPageCount*'
         $readme | Should -BeLike '*before invoking the excess request*'
         $readme | Should -BeLike '*Application.Read.All*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.20 is tenant-read-only*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.21 is tenant-read-only*'
+        $security | Should -BeLike '*invalid tenant contexts before Graph requests*'
         $security | Should -BeLike '*maximum page count*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
     }
