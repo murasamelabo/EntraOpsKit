@@ -48,6 +48,22 @@ Describe 'Built-in Graph authentication boundary' {
                 )
             }
         }
+
+        It 'rejects a reused context without the approved scope before any Graph request' {
+            Mock Import-Module {}
+            Mock Get-MgContext {
+                return [pscustomobject]@{
+                    Scopes = @('Directory.Read.All')
+                    TenantId = '11111111-2222-3333-4444-555555555555'
+                }
+            }
+            Mock Connect-MgGraph {}
+            Mock Invoke-MgGraphRequest { return @{ value = @() } }
+
+            { Get-EntraCredentialInventory } | Should -Throw "*must include 'Application.Read.All'*"
+            Should -Invoke Connect-MgGraph -Times 0 -Exactly
+            Should -Invoke Invoke-MgGraphRequest -Times 0 -Exactly
+        }
     }
 }
 
@@ -216,20 +232,20 @@ Describe 'Export-EntraCredentialExpiryReport' {
 }
 
 Describe 'Module metadata and documentation' {
-    It 'keeps v0.1.19 and the security boundary aligned' {
+    It 'keeps v0.1.20 and the security boundary aligned' {
         $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
         $readmePath = Join-Path $PSScriptRoot '..' 'README.md'
         $securityPath = Join-Path $PSScriptRoot '..' 'SECURITY.md'
         $moduleData = Import-PowerShellDataFile $modulePath
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
-        $moduleData.ModuleVersion | Should -Be '0.1.19'
+        $moduleData.ModuleVersion | Should -Be '0.1.20'
         $moduleData.Description | Should -BeLike '*Tenant-read-only*'
-        $readme | Should -BeLike '*Version 0.1.19*'
+        $readme | Should -BeLike '*Version 0.1.20*'
         $readme | Should -BeLike '*MaximumPageCount*'
         $readme | Should -BeLike '*before invoking the excess request*'
         $readme | Should -BeLike '*Application.Read.All*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.19 is tenant-read-only*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.20 is tenant-read-only*'
         $security | Should -BeLike '*maximum page count*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
     }

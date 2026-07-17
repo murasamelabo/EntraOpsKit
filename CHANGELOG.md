@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.20 - 2026-07-17
+
+- Add offline Pester coverage proving that a reused Graph context without `Application.Read.All` fails before connection or Graph requests.
+- Align manifest, README, security documentation, and version assertions with v0.1.20.
+- Keep runtime behavior, permissions, dependencies, GET-only endpoints, output fields, pagination controls, and the no-secret boundary unchanged.
+
 ## v0.1.19 - 2026-07-17
 
 - Add network-free Pester coverage for the built-in Microsoft Graph authentication and request path.
