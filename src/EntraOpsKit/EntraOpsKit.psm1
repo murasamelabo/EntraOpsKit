@@ -11,7 +11,11 @@ function Get-EntraCredentialInventory {
 
         [Parameter()]
         [ValidatePattern('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')]
-        [string]$TenantId
+        [string]$TenantId,
+
+        [Parameter()]
+        [ValidateRange(1, 10000)]
+        [int]$MaximumPageCount = 1000
     )
 
     if ($null -eq $Request) {
@@ -51,6 +55,7 @@ function Get-EntraCredentialInventory {
 
     foreach ($query in $resourceQueries) {
         $uri = $query.Uri
+        $pageCount = 0
         $visitedUris = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
         while ($uri) {
             Assert-EntraGraphReadUri -Uri $uri -ResourcePath $query.Path
@@ -58,6 +63,10 @@ function Get-EntraCredentialInventory {
             if (-not $visitedUris.Add($requestKey)) {
                 throw "Microsoft Graph pagination URI was repeated for '$($query.Path)'."
             }
+            if ($pageCount -ge $MaximumPageCount) {
+                throw "Microsoft Graph pagination exceeded the maximum page count of $MaximumPageCount for '$($query.Path)'."
+            }
+            $pageCount++
             $response = & $Request -Uri $uri -Method 'GET'
             if ($null -eq $response) {
                 throw "Microsoft Graph returned no response for '$uri'."
@@ -140,7 +149,6 @@ function Get-EntraCredentialExpiryFinding {
                     else {
                         'healthy'
                     }
-
                     $findings.Add([pscustomobject]@{
                         PSTypeName     = 'EntraOpsKit.CredentialExpiryFinding'
                         Severity       = $severity
@@ -198,7 +206,6 @@ function Export-EntraCredentialExpiryReport {
         $Finding | Export-Csv -LiteralPath $Path -NoTypeInformation -Encoding utf8BOM
         return Get-Item -LiteralPath $Path
     }
-
     $summary = [ordered]@{
         total = $Finding.Count
         expired = @($Finding | Where-Object Severity -eq 'expired').Count
@@ -218,11 +225,7 @@ function Export-EntraCredentialExpiryReport {
 }
 
 function Assert-EntraReadContext {
-    param(
-        [object]$Context,
-        [string]$TenantId
-    )
-
+    param([object]$Context, [string]$TenantId)
     if ($null -eq $Context) {
         throw 'Microsoft Graph authentication did not produce a context.'
     }
@@ -311,7 +314,11 @@ function ConvertTo-EntraDateTimeOffset {
     param([object]$Value)
     if ($null -eq $Value -or [string]::IsNullOrWhiteSpace([string]$Value)) { return $null }
     try {
-        return [DateTimeOffset]::Parse([string]$Value, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AssumeUniversal).ToUniversalTime()
+        return [DateTimeOffset]::Parse(
+            [string]$Value,
+            [Globalization.CultureInfo]::InvariantCulture,
+            [Globalization.DateTimeStyles]::AssumeUniversal
+        ).ToUniversalTime()
     }
     catch { return $null }
 }

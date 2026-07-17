@@ -2,33 +2,33 @@
 
 ## Supported Version
 
-The latest release is supported. Source and release artifacts are publicly inspectable; live tenant use and generated reports remain the operator's controlled responsibility.
+The latest release is supported. Source and release artifacts are publicly inspectable; tenant use and generated reports remain the operator's responsibility.
 
 ## Security Boundary
 
-EntraOpsKit 0.1.17 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals, requires Application.Read.All, rejects pagination outside the expected Global Microsoft Graph host and exact case-sensitive resource path, rejects non-HTTPS links, non-default ports, user information, fragments in absolute or relative pagination links, case-variant resource paths, and repeated pagination URIs per resource after canonicalizing equivalent relative and absolute Global Graph forms. It ignores documented agent-identity placeholder objects.
+EntraOpsKit 0.1.18 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals and requires `Application.Read.All`.
 
-Tenant-read-only does not mean filesystem-read-only. `Export-EntraCredentialExpiryReport` creates local directories and report files when requested by the operator.
+The collector accepts at most `MaximumPageCount` pages per resource, defaulting to 1000. A nextLink beyond the maximum page count is rejected before callback invocation. It also rejects pagination outside the expected Global Microsoft Graph host and exact case-sensitive resource path, non-HTTPS links, non-default ports, user information, fragments, case-variant resource paths, and repeated links after canonicalizing equivalent relative and absolute Global Graph forms. It ignores documented agent-identity placeholder objects.
 
-Built-in inventory and finding generation copy credential metadata but do not copy password secret text, certificate key material, or other credential values. `Export-EntraCredentialExpiryReport` serializes caller-supplied object properties as provided and does not sanitize arbitrary objects. Callers must export only module-generated findings or other reviewed objects that contain no secrets.
+Tenant-read-only does not mean filesystem-read-only. `Export-EntraCredentialExpiryReport` creates local directories and report files when requested.
 
-When the module establishes a connection, it requests Application.Read.All with process-scoped context. An existing operator context can contain broader scopes. Regardless of those scopes, built-in collection remains restricted to the documented GET endpoints. When a requested TenantId is supplied, the active context must identify the same tenant before collection begins.
+Built-in inventory and finding generation copy credential metadata but not password secret text, certificate key material, or credential values. The exporter serializes caller-supplied properties and does not sanitize arbitrary objects. Export only reviewed objects containing no secrets.
 
-The optional Request scriptblock is operator-supplied code intended for testing or controlled integration. It bypasses module-managed authentication and context validation. EntraOpsKit validates the URI and GET method passed to it but cannot prevent unrelated side effects in caller-provided code. Use only trusted callbacks.
+When the module establishes a connection, it requests `Application.Read.All` with process-scoped context. Existing contexts can contain broader scopes, but built-in collection remains restricted to the documented GET endpoints. When a requested TenantId is supplied, the active context must identify the same tenant.
 
-The report contains tenant identifiers and operational metadata. Keep reports in approved storage, restrict access, and remove them according to policy.
+The optional `Request` callback is operator-supplied code for tests or controlled integration. It bypasses module-managed authentication and context validation. The module validates URI and GET arguments but cannot prevent unrelated callback side effects. Use only trusted callbacks.
 
-CSV reports preserve tenant-controlled text and do not neutralize spreadsheet formulas. Import CSV columns as text or sanitize reports through an approved process before opening them in spreadsheet software. Prefer JSON when spreadsheet processing is not required.
+Reports contain tenant identifiers and operational metadata. Store and remove them according to approved policy. CSV reports preserve tenant-controlled text and do not neutralize spreadsheet formulas; prefer JSON or import CSV columns as text.
 
-## Reporting A Vulnerability
+## Reporting a Vulnerability
 
-Use GitHub private vulnerability reporting. Do not include tenant identifiers, tokens, credential values, exported reports, or other sensitive data in a public issue.
+Use GitHub private vulnerability reporting. Do not include tenant identifiers, tokens, credential values, or exported reports in public issues.
 
 ## Explicit Non-Goals
 
-- credential creation, rotation, or deletion;
-- role assignment or permission consent;
-- tenant configuration changes;
-- token collection or persistence;
-- arbitrary Microsoft Graph endpoints or HTTP hosts;
-- national-cloud compatibility in the current Global Graph implementation.
+- Credential creation, rotation, or deletion.
+- Role assignment or permission consent.
+- Tenant configuration changes.
+- Token collection or persistence.
+- Arbitrary Graph endpoints or HTTP hosts.
+- National-cloud compatibility in the current Global Graph implementation.

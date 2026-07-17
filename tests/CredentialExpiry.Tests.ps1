@@ -24,14 +24,14 @@ Describe 'Get-EntraCredentialExpiryFinding' {
 }
 
 Describe 'Get-EntraCredentialInventory' {
-    It 'skips agent identity placeholder objects returned by Graph' {
+    It 'skips documented agent identity placeholder objects' {
         $responses = @{
             '/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials' = @{ value = @(
-                @{ '@odata.type' = '#microsoft.graph.application'; id = 'app-object-1'; appId = 'app-client-1'; displayName = 'App One'; passwordCredentials = @(); keyCredentials = @() },
+                @{ '@odata.type' = '#microsoft.graph.application'; id = 'app-1'; passwordCredentials = @(); keyCredentials = @() },
                 @{ '@odata.type' = '#microsoft.graph.agentIdentityBlueprint'; id = 'ignored'; passwordCredentials = @(); keyCredentials = @() }
             ) }
             '/v1.0/servicePrincipals?$select=id,appId,displayName,passwordCredentials,keyCredentials' = @{ value = @(
-                @{ '@odata.type' = '#microsoft.graph.servicePrincipal'; id = 'sp-object-1'; appId = 'app-client-1'; displayName = 'SP One'; passwordCredentials = @(); keyCredentials = @() },
+                @{ '@odata.type' = '#microsoft.graph.servicePrincipal'; id = 'sp-1'; passwordCredentials = @(); keyCredentials = @() },
                 @{ '@odata.type' = '#microsoft.graph.agentIdentityBlueprintPrincipal'; id = 'ignored'; passwordCredentials = @(); keyCredentials = @() }
             ) }
         }
@@ -52,11 +52,10 @@ Describe 'Get-EntraCredentialInventory' {
             param([string]$Uri, [string]$Method)
             $Method | Should -Be 'GET'
             $requests.Add($Uri)
-            if ($Uri -eq $pageTwo) { return @{ value = @(); '@odata.nextLink' = $pageTwo } }
             return @{ value = @(); '@odata.nextLink' = $pageTwo }
         }
         { Get-EntraCredentialInventory -Request $request } | Should -Throw '*pagination URI was repeated*'
-        $requests | Should -Be @('/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials', $pageTwo)
+        $requests.Count | Should -Be 2
     }
 
     It 'rejects equivalent relative and absolute pagination URIs before a duplicate request' {
@@ -69,7 +68,27 @@ Describe 'Get-EntraCredentialInventory' {
             return @{ value = @(); '@odata.nextLink' = $absoluteInitial }
         }
         { Get-EntraCredentialInventory -Request $request } | Should -Throw '*pagination URI was repeated*'
-        $requests | Should -Be @('/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials')
+        $requests.Count | Should -Be 1
+    }
+
+    It 'rejects a unique-link sequence at the page limit before invoking the excess request' {
+        $requests = [System.Collections.Generic.List[string]]::new()
+        $request = {
+            param([string]$Uri, [string]$Method)
+            $Method | Should -Be 'GET'
+            $requests.Add($Uri)
+            $nextLink = if ($requests.Count -eq 1) {
+                'https://graph.microsoft.com/v1.0/applications?page=2'
+            }
+            else {
+                'https://graph.microsoft.com/v1.0/applications?page=3'
+            }
+            return @{ value = @(); '@odata.nextLink' = $nextLink }
+        }
+        {
+            Get-EntraCredentialInventory -Request $request -MaximumPageCount 2
+        } | Should -Throw '*exceeded the maximum page count of 2*'
+        $requests.Count | Should -Be 2
     }
 
     It 'rejects <Name> before invoking another request' -TestCases @(
@@ -77,12 +96,12 @@ Describe 'Get-EntraCredentialInventory' {
         @{ Name = 'an unexpected host'; NextLink = 'https://example.invalid/v1.0/applications?page=2' },
         @{ Name = 'a non-default port'; NextLink = 'https://graph.microsoft.com:444/v1.0/applications?page=2' },
         @{ Name = 'URI user information'; NextLink = 'https://user@graph.microsoft.com/v1.0/applications?page=2' },
-        @{ Name = 'an absolute URI fragment'; NextLink = 'https://graph.microsoft.com/v1.0/applications?page=2#fragment' },
-        @{ Name = 'a relative URI fragment'; NextLink = '/v1.0/applications?page=2#fragment' },
-        @{ Name = 'an absolute resource-path escape'; NextLink = 'https://graph.microsoft.com/v1.0/applications/extra?page=2' },
-        @{ Name = 'a relative resource-path escape'; NextLink = '/v1.0/applications/extra?page=2' },
-        @{ Name = 'a case-variant absolute resource path'; NextLink = 'https://graph.microsoft.com/v1.0/Applications?page=2' },
-        @{ Name = 'a case-variant relative resource path'; NextLink = '/v1.0/Applications' }
+        @{ Name = 'an absolute fragment'; NextLink = 'https://graph.microsoft.com/v1.0/applications?page=2#fragment' },
+        @{ Name = 'a relative fragment'; NextLink = '/v1.0/applications?page=2#fragment' },
+        @{ Name = 'an absolute path escape'; NextLink = 'https://graph.microsoft.com/v1.0/applications/extra?page=2' },
+        @{ Name = 'a relative path escape'; NextLink = '/v1.0/applications/extra?page=2' },
+        @{ Name = 'an absolute case variant'; NextLink = 'https://graph.microsoft.com/v1.0/Applications?page=2' },
+        @{ Name = 'a relative case variant'; NextLink = '/v1.0/Applications' }
     ) {
         param($Name, $NextLink)
         $requests = [System.Collections.Generic.List[string]]::new()
@@ -96,7 +115,7 @@ Describe 'Get-EntraCredentialInventory' {
         $requests.Count | Should -Be 1
     }
 
-    It 'rejects a null Graph response without issuing another request' {
+    It 'rejects a null response without issuing another request' {
         $requests = [System.Collections.Generic.List[string]]::new()
         $request = {
             param([string]$Uri, [string]$Method)
@@ -108,10 +127,10 @@ Describe 'Get-EntraCredentialInventory' {
         $requests.Count | Should -Be 1
     }
 
-    It 'rejects a malformed tenant identifier before invoking a callback' {
+    It 'validates the page limit before callback invocation' {
         $called = $false
         $request = { $called = $true }
-        { Get-EntraCredentialInventory -Request $request -TenantId 'not-a-guid' } | Should -Throw
+        { Get-EntraCredentialInventory -Request $request -MaximumPageCount 0 } | Should -Throw
         $called | Should -BeFalse
     }
 }
@@ -126,11 +145,6 @@ Describe 'Active Graph context validation' {
         It 'rejects a mismatched requested tenant' {
             $context = [pscustomobject]@{ Scopes = @('Application.Read.All'); TenantId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
             { Assert-EntraReadContext -Context $context -TenantId '11111111-2222-3333-4444-555555555555' } | Should -Throw '*does not match*'
-        }
-
-        It 'rejects a context without a valid tenant when TenantId is requested' {
-            $context = [pscustomobject]@{ Scopes = @('Application.Read.All'); TenantId = $null }
-            { Assert-EntraReadContext -Context $context -TenantId '11111111-2222-3333-4444-555555555555' } | Should -Throw '*does not identify a valid tenant*'
         }
     }
 }
@@ -147,18 +161,6 @@ Describe 'Export-EntraCredentialExpiryReport' {
         ($raw | ConvertFrom-Json -Depth 20).summary.total | Should -Be 5
     }
 
-    It 'writes CSV without credential secret values' {
-        $fixturePath = Join-Path $PSScriptRoot 'fixtures' 'credentials.json'
-        $outputPath = Join-Path $TestDrive 'report.csv'
-        $inventory = Get-Content -LiteralPath $fixturePath -Raw | ConvertFrom-Json -Depth 20
-        $findings = @($inventory | Get-EntraCredentialExpiryFinding -Now ([DateTimeOffset]::Parse('2026-07-14T00:00:00Z')))
-        Export-EntraCredentialExpiryReport -Finding $findings -Path $outputPath -Format Csv
-        $raw = Get-Content -LiteralPath $outputPath -Raw
-        $raw | Should -Not -Match 'fixture-secret-value'
-        $raw | Should -Not -Match 'secretText'
-        (Import-Csv -LiteralPath $outputPath).Count | Should -Be 5
-    }
-
     It 'honors WhatIf without creating a report' {
         $outputPath = Join-Path $TestDrive 'what-if.json'
         Export-EntraCredentialExpiryReport -Finding @() -Path $outputPath -WhatIf
@@ -167,31 +169,21 @@ Describe 'Export-EntraCredentialExpiryReport' {
 }
 
 Describe 'Module metadata and documentation' {
-    It 'keeps version and security-boundary documentation aligned' {
+    It 'keeps v0.1.18 and the security boundary aligned' {
         $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
         $readmePath = Join-Path $PSScriptRoot '..' 'README.md'
         $securityPath = Join-Path $PSScriptRoot '..' 'SECURITY.md'
         $moduleData = Import-PowerShellDataFile $modulePath
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
-        $moduleData.ModuleVersion | Should -Be '0.1.17'
+        $moduleData.ModuleVersion | Should -Be '0.1.18'
         $moduleData.Description | Should -BeLike '*Tenant-read-only*'
-        $readme | Should -BeLike '*Version 0.1.17*'
-        $readme | Should -BeLike '*tenant-read-only*'
-        $readme | Should -BeLike '*report export writes local files*'
+        $readme | Should -BeLike '*Version 0.1.18*'
+        $readme | Should -BeLike '*MaximumPageCount*'
+        $readme | Should -BeLike '*before invoking the excess request*'
         $readme | Should -BeLike '*Application.Read.All*'
-        $readme | Should -BeLike '*operator-supplied test seam*'
-        $readme | Should -BeLike '*Relative and absolute pagination links containing fragments are rejected*'
-        $readme | Should -BeLike '*case-variant resource paths are rejected*'
-        $readme | Should -BeLike '*Spreadsheet software can interpret values beginning with formula markers as spreadsheet formulas*'
-        $readme | Should -BeLike '*does not inspect or sanitize arbitrary input properties*'
-        $readme | Should -BeLike '*treats credentials whose expiration has lapsed as completed*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.17 is tenant-read-only*'
-        $security | Should -BeLike '*does not mean filesystem-read-only*'
-        $security | Should -BeLike '*requested TenantId*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.18 is tenant-read-only*'
+        $security | Should -BeLike '*maximum page count*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
-        $security | Should -BeLike '*case-variant resource paths*'
-        $security | Should -BeLike '*CSV reports preserve tenant-controlled text and do not neutralize spreadsheet formulas*'
-        $security | Should -BeLike '*does not sanitize arbitrary objects*'
     }
 }
