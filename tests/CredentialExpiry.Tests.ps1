@@ -3,6 +3,54 @@ BeforeAll {
     Import-Module $modulePath -Force
 }
 
+Describe 'Built-in Graph authentication boundary' {
+    InModuleScope EntraOpsKit {
+        BeforeAll {
+            function Get-MgContext {}
+            function Connect-MgGraph {
+                param([string[]]$Scopes, [switch]$NoWelcome, [string]$ContextScope, [string]$TenantId)
+            }
+            function Invoke-MgGraphRequest {
+                param([string]$Method, [string]$Uri, [string]$OutputType)
+            }
+        }
+
+        It 'uses the approved scope, process context, tenant, GET method, and endpoints' {
+            $tenantId = '11111111-2222-3333-4444-555555555555'
+            $script:contextCallCount = 0
+            Mock Import-Module {}
+            Mock Get-MgContext {
+                $script:contextCallCount++
+                if ($script:contextCallCount -eq 1) { return $null }
+                return [pscustomobject]@{
+                    Scopes = @('Application.Read.All')
+                    TenantId = $tenantId
+                }
+            }
+            Mock Connect-MgGraph {}
+            Mock Invoke-MgGraphRequest { return @{ value = @() } }
+
+            @(Get-EntraCredentialInventory -TenantId $tenantId).Count | Should -Be 0
+
+            Should -Invoke Connect-MgGraph -Times 1 -Exactly -ParameterFilter {
+                $Scopes.Count -eq 1 -and
+                $Scopes[0] -eq 'Application.Read.All' -and
+                $NoWelcome -and
+                $ContextScope -eq 'Process' -and
+                $TenantId -eq $tenantId
+            }
+            Should -Invoke Invoke-MgGraphRequest -Times 2 -Exactly -ParameterFilter {
+                $Method -eq 'GET' -and
+                $OutputType -eq 'PSObject' -and
+                $Uri -in @(
+                    '/v1.0/applications?$select=id,appId,displayName,passwordCredentials,keyCredentials',
+                    '/v1.0/servicePrincipals?$select=id,appId,displayName,passwordCredentials,keyCredentials'
+                )
+            }
+        }
+    }
+}
+
 Describe 'Get-EntraCredentialExpiryFinding' {
     It 'classifies and orders credentials deterministically' {
         $fixturePath = Join-Path $PSScriptRoot 'fixtures' 'credentials.json'
@@ -85,9 +133,8 @@ Describe 'Get-EntraCredentialInventory' {
             }
             return @{ value = @(); '@odata.nextLink' = $nextLink }
         }
-        {
-            Get-EntraCredentialInventory -Request $request -MaximumPageCount 2
-        } | Should -Throw '*exceeded the maximum page count of 2*'
+        { Get-EntraCredentialInventory -Request $request -MaximumPageCount 2 } |
+            Should -Throw '*exceeded the maximum page count of 2*'
         $requests.Count | Should -Be 2
     }
 
@@ -169,20 +216,20 @@ Describe 'Export-EntraCredentialExpiryReport' {
 }
 
 Describe 'Module metadata and documentation' {
-    It 'keeps v0.1.18 and the security boundary aligned' {
+    It 'keeps v0.1.19 and the security boundary aligned' {
         $modulePath = Join-Path $PSScriptRoot '..' 'src' 'EntraOpsKit' 'EntraOpsKit.psd1'
         $readmePath = Join-Path $PSScriptRoot '..' 'README.md'
         $securityPath = Join-Path $PSScriptRoot '..' 'SECURITY.md'
         $moduleData = Import-PowerShellDataFile $modulePath
         $readme = Get-Content -LiteralPath $readmePath -Raw
         $security = Get-Content -LiteralPath $securityPath -Raw
-        $moduleData.ModuleVersion | Should -Be '0.1.18'
+        $moduleData.ModuleVersion | Should -Be '0.1.19'
         $moduleData.Description | Should -BeLike '*Tenant-read-only*'
-        $readme | Should -BeLike '*Version 0.1.18*'
+        $readme | Should -BeLike '*Version 0.1.19*'
         $readme | Should -BeLike '*MaximumPageCount*'
         $readme | Should -BeLike '*before invoking the excess request*'
         $readme | Should -BeLike '*Application.Read.All*'
-        $security | Should -BeLike '*EntraOpsKit 0.1.18 is tenant-read-only*'
+        $security | Should -BeLike '*EntraOpsKit 0.1.19 is tenant-read-only*'
         $security | Should -BeLike '*maximum page count*'
         $security | Should -BeLike '*GET endpoints for applications and service principals*'
     }

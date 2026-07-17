@@ -6,7 +6,7 @@ The latest release is supported. Source and release artifacts are publicly inspe
 
 ## Security Boundary
 
-EntraOpsKit 0.1.18 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals and requires `Application.Read.All`.
+EntraOpsKit 0.1.19 is tenant-read-only in its built-in live Graph behavior. Its live collector calls only Microsoft Graph GET endpoints for applications and service principals and requires `Application.Read.All`. Offline regression coverage verifies the built-in connection scope, process-scoped context, tenant forwarding, GET method, and approved endpoints without contacting Microsoft Graph.
 
 The collector accepts at most `MaximumPageCount` pages per resource, defaulting to 1000. A nextLink beyond the maximum page count is rejected before callback invocation. It also rejects pagination outside the expected Global Microsoft Graph host and exact case-sensitive resource path, non-HTTPS links, non-default ports, user information, fragments, case-variant resource paths, and repeated links after canonicalizing equivalent relative and absolute Global Graph forms. It ignores documented agent-identity placeholder objects.
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.19 - 2026-07-17
+
+- Add network-free Pester coverage for the built-in Microsoft Graph authentication and request path.
+- Verify Application.Read.All, process-scoped context, tenant forwarding, GET-only requests, and the two approved endpoints.
+- Keep runtime behavior, permissions, dependencies, output fields, pagination controls, and the no-secret boundary unchanged.
+
 ## v0.1.18 - 2026-07-17
 
 - Add a configurable per-resource pagination limit, defaulting to 1000 pages.

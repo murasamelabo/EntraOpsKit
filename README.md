@@ -2,7 +2,7 @@
 
 EntraOpsKit is a collection of narrowly scoped, tenant-read-only Microsoft Entra operations tools. Built-in live collection does not mutate Microsoft Entra, but report export writes local files and an operator-supplied callback can have unrelated side effects. Version-pinned CI dependencies, offline project tests, Pester, and PSScriptAnalyzer provide release checks before publication.
 
-Version 0.1.18 provides a credential expiry auditor for application registrations and service principals. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials.
+Version 0.1.19 provides a credential expiry auditor for application registrations and service principals and adds offline regression coverage for its built-in authentication and request boundary. It inventories credential metadata, classifies expiry risk, and exports JSON or CSV. It does not create, rotate, remove, or update credentials.
 
 Pagination is bounded per resource by `MaximumPageCount`, which defaults to 1000 and accepts values from 1 through 10000. When the limit is reached, a validated nextLink is rejected before invoking the excess request. Repeated, equivalent, malformed, cross-host, fragment-bearing, path-escaping, and case-variant pagination links are also rejected before callback invocation.
 
@@ -51,7 +51,7 @@ pwsh -NoLogo -NoProfile -File ./tests/Run-OfflineTests.ps1
 Invoke-Pester -Path ./tests/CredentialExpiry.Tests.ps1 -Output Detailed
 ```
 
-The fuller suite uses Pester 6 and PSScriptAnalyzer. Installing those modules can require access to the configured repository.
+The Pester suite uses mocks to verify the built-in connection scope, process-scoped context, tenant forwarding, GET method, and approved endpoints without contacting Microsoft Graph. The fuller suite uses Pester 6 and PSScriptAnalyzer. Installing those modules can require access to the configured repository.
 
 ## Provenance
 
